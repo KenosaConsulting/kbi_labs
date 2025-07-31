@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
-from src.api.routers import companies, analytics, health
+from src.api.routers import companies, analytics, health, sec
 from src.models.database_manager import db_manager
 
 # Configure logging
@@ -62,6 +62,7 @@ app.include_router(health_monitoring.router, prefix="/api/v3", tags=["monitoring
 app.include_router(health.router)
 app.include_router(companies.router, prefix="/api/v2")
 app.include_router(analytics.router, prefix="/api/v2")
+app.include_router(sec.router)
 
 @app.get("/")
 async def root():
