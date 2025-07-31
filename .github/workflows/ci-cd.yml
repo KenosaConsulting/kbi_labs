@@ -1,0 +1,118 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  test:
+    name: Test & Validate
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Create test database
+      run: |
+        # Create a test SQLite database
+        touch kbi_production.db
+        
+    - name: Run linting
+      run: |
+        # Check code style (allow some flexibility)
+        flake8 src/ --max-line-length=100 --exclude=__pycache__ --ignore=E402,W503 || true
+    
+    - name: Run tests
+      env:
+        DATABASE_URL: sqlite:///./kbi_production.db
+      run: |
+        pytest tests/ -v --cov=src --cov-report=term-missing
+    
+    - name: Check API starts
+      run: |
+        # Test that the API can start
+        timeout 10s python run_api.py || code=$?
+        if [ $code -eq 124 ]; then
+          echo "✅ API started successfully (timeout expected)"
+        else
+          echo "❌ API failed to start"
+          exit 1
+        fi
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run security scan
+      uses: pyupio/safety@v1
+      with:
+        api-key: ${{ secrets.SAFETY_API_KEY }}
+      continue-on-error: true
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Deploy to staging
+      run: |
+        echo "🚀 Deploying to staging environment..."
+        # Add staging deployment here
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [test, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to EC2
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_USER: ${{ secrets.EC2_USER }}
+        EC2_KEY: ${{ secrets.EC2_SSH_KEY }}
+      run: |
+        # This is where we'll add EC2 deployment
+        echo "🚀 Ready to deploy to production!"
+        echo "Configure EC2 secrets in GitHub to enable auto-deployment"
+        
+        # Example deployment script (uncomment when ready):
+        # echo "$EC2_KEY" > deploy_key.pem
+        # chmod 600 deploy_key.pem
+        # ssh -i deploy_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+        #   cd /home/ubuntu/KBILabs
+        #   git pull origin main
+        #   pip install -r requirements.txt
+        #   sudo systemctl restart kbi-api
+        # EOF

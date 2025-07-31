@@ -1,0 +1,61 @@
+-- Insert sample companies into enriched_companies table
+INSERT INTO enriched_companies (
+    uei,
+    organization_name,
+    primary_naics,
+    state,
+    city,
+    zipcode,
+    website,
+    phone_number,
+    sam_registration_status,
+    cage_code,
+    federal_contracts_count,
+    federal_contracts_value,
+    enrichment_status
+) VALUES 
+(
+    'TECH123456789',
+    'TechCorp Solutions',
+    '541511',
+    'CA',
+    'San Francisco',
+    '94105',
+    'https://techcorpsolutions.com',
+    '415-555-0100',
+    'Active',
+    'TC123',
+    15,
+    5200000.00,
+    '{"status": "completed", "apis": ["sam", "clearbit"]}'::jsonb
+),
+(
+    'GREEN234567890',
+    'Green Energy Inc',
+    '221114',
+    'TX',
+    'Austin',
+    '78701',
+    'https://greenenergy.com',
+    '512-555-0200',
+    'Active',
+    'GE234',
+    8,
+    3800000.00,
+    '{"status": "completed", "apis": ["sam", "census"]}'::jsonb
+),
+(
+    'HEALTH345678901',
+    'HealthTech Pro',
+    '621610',
+    'MA',
+    'Boston',
+    '02110',
+    'https://healthtechpro.com',
+    '617-555-0300',
+    'Active',
+    'HT345',
+    22,
+    7100000.00,
+    '{"status": "completed", "apis": ["sam", "clearbit", "nsf"]}'::jsonb
+);

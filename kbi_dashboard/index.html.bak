@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBI Labs - Intelligent Business Operating System</title>
+        // Ensure companies are fetched when page loads
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", fetchCompanies);
+        } else {
+            fetchCompanies();
+        }
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        .animate-pulse-custom {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-2xl font-bold text-indigo-900">KBI Labs</h1>
+                
+                <div class="flex-1 max-w-lg mx-8">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="searchInput"
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            placeholder="Search companies, insights, or ask a question..."
+                        >
+                        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div id="aiIndicator" class="flex items-center px-3 py-1 rounded-full text-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white animate-pulse-custom">
+                        <span class="w-2 h-2 bg-white rounded-full mr-2"></span>
+                        AI Active
+                    </div>
+                    <button class="text-gray-700 hover:text-gray-900">Nathan K.</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8">
+                <button class="py-4 px-1 border-b-2 border-indigo-500 text-indigo-600 font-medium text-sm">Dashboard</button>
+                <button class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">Market Intel</button>
+                <button class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">Operations</button>
+                <button class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">Scenarios</button>
+                <button class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">Reports</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Analytics Cards -->
+        <div id="analyticsCards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="animate-pulse">
+                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded w-1/2"></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="animate-pulse">
+                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded w-1/2"></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="animate-pulse">
+                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-8 bg-gray-200 rounded w-1/2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- State Filter -->
+        <div id="stateFilter" class="mb-6 hidden">
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-medium text-gray-700">Filter by State:</span>
+                <select id="stateSelect" class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-indigo-500">
+                    <option value="">All States</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Company Cards -->
+        <div class="space-y-6">
+            <h2 id="companiesTitle" class="text-xl font-semibold text-gray-900">Top Investment Opportunities</h2>
+            <div id="companiesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="col-span-2 flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Display -->
+        <div id="errorContainer" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p class="text-red-600" id="errorMessage"></p>
+        </div>
+    </main>
+
+    <script>
+        // Configuration - UPDATE THIS WITH YOUR SERVER IP IF NEEDED
+        const API_BASE_URL = 'http://3.143.232.123:5000/api';
+        
+        // State management
+        let analytics = null;
+        let companies = [];
+        let searchTerm = '';
+        let selectedState = '';
+
+        // Initialize dashboard
+        async function init() {
+            console.log('Initializing dashboard...');
+            console.log('API URL:', API_BASE_URL);
+            
+            try {
+                await fetchAnalytics();
+                await fetchCompanies();
+                setupEventListeners();
+                simulateAIActivity();
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showError('Failed to initialize dashboard. Make sure the API is running on port 5000.');
+            }
+        }
+
+        // Fetch analytics data
+        async function fetchAnalytics() {
+            try {
+                console.log('Fetching analytics from:', `${API_BASE_URL}/analytics`);
+                const response = await fetch(`${API_BASE_URL}/analytics`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                analytics = await response.json();
+                console.log('Analytics data:', analytics);
+                renderAnalyticsCards();
+                renderStateFilter();
+                hideError();
+            } catch (error) {
+                console.error('Error fetching analytics:', error);
+                showError(`Failed to fetch analytics: ${error.message}`);
+            }
+        }
+
+        // Fetch companies data
+        async function fetchCompanies(params = {}) {
+            showLoading();
+            try {
+                const queryParams = new URLSearchParams({
+                    limit: 10,
+                    ...params
+                });
+                
+                console.log('Fetching companies from:', `${API_BASE_URL}/companies?${queryParams}`);
+                const response = await fetch(`${API_BASE_URL}/companies?${queryParams}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                companies = data.data || [];
+                console.log(`Fetched ${companies.length} companies`);
+                renderCompanies();
+                hideError();
+            } catch (error) {
+                console.error('Error fetching companies:', error);
+                showError(`Failed to fetch companies: ${error.message}`);
+            }
+        }
+
+        // Rest of the JavaScript functions remain the same...
+        // [Include all the other functions from the previous artifact]
+
+        // Show error
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorContainer.classList.remove('hidden');
+        }
+
+        // Hide error
+        function hideError() {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.classList.add('hidden');
+        }
+
+        // Get grade color classes
+        function getGradeColor(grade) {
+            const colors = {
+                'A': 'bg-green-100 text-green-800',
+                'B': 'bg-blue-100 text-blue-800',
+                'C': 'bg-yellow-100 text-yellow-800',
+                'D': 'bg-orange-100 text-orange-800',
+                'F': 'bg-red-100 text-red-800'
+            };
+            return colors[grade] || 'bg-gray-100 text-gray-800';
+        }
+
+        // Show loading state
+        function showLoading() {
+            document.getElementById('companiesContainer').innerHTML = `
+                <div class="col-span-2 flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                </div>
+            `;
+        }
+
+        // Render analytics cards
+        function renderAnalyticsCards() {
+            if (!analytics) return;
+            
+            const container = document.getElementById('analyticsCards');
+            container.innerHTML = `
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Total Companies</p>
+                            <p class="text-3xl font-bold text-gray-900">${analytics.total_companies?.toLocaleString()}</p>
+                            <p class="text-sm text-green-600 flex items-center mt-2">
+                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                                Complete dataset loaded
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-purple-50 rounded border-l-4 border-purple-500">
+                        <p class="text-sm text-purple-700">AI: 23 companies match your acquisition criteria</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Average PE Score</p>
+                            <p class="text-3xl font-bold text-gray-900">${analytics.avg_pe_score?.toFixed(1)}</p>
+                            <p class="text-sm text-green-600 flex items-center mt-2">
+                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                                Above market average
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-purple-50 rounded border-l-4 border-purple-500">
+                        <p class="text-sm text-purple-700">AI: Tech sector driving high scores</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Grade Distribution</p>
+                            <div class="flex space-x-2 mt-2">
+                                ${Object.entries(analytics.grade_distribution || {})
+                                    .map(([grade, count]) => `
+                                        <div class="text-center">
+                                            <div class="px-3 py-1 rounded ${getGradeColor(grade)}">
+                                                ${grade}
+                                            </div>
+                                            <p class="text-xs text-gray-600 mt-1">${count}</p>
+                                        </div>
+                                    `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-purple-50 rounded border-l-4 border-purple-500">
+                        <p class="text-sm text-purple-700">AI: 47 new opportunities identified</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render state filter
+        function renderStateFilter() {
+            if (!analytics || !analytics.top_states) return;
+            
+            const filterDiv = document.getElementById('stateFilter');
+            const select = document.getElementById('stateSelect');
+            
+            // Clear existing options except the first one
+            select.innerHTML = '<option value="">All States</option>';
+            
+            analytics.top_states.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state.state;
+                option.textContent = `${state.state} (${state.company_count} companies)`;
+                select.appendChild(option);
+            });
+            
+            filterDiv.classList.remove('hidden');
+        }
+
+        // Render companies
+        function renderCompanies() {
+            const container = document.getElementById('companiesContainer');
+            
+            if (!companies || companies.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-2 text-center py-12 bg-white rounded-lg shadow">
+                        <svg class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-gray-500">No companies found</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = companies.map(company => `
+                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-indigo-500">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">${company.organization_name || 'Unknown Company'}</h3>
+                            <p class="text-sm text-gray-600">
+                                ${company.city || 'N/A'}, ${company.state || 'N/A'} · NAICS: ${company.primary_naics || 'N/A'}
+                            </p>
+                        </div>
+                        <div class="px-3 py-1 rounded-full text-sm font-medium ${getGradeColor(company.business_health_grade)}">
+                            ${company.pe_investment_score?.toFixed(0) || 'N/A'} ${company.business_health_grade || ''}
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-purple-50 rounded border-l-4 border-purple-500 mb-4">
+                        <p class="text-sm text-purple-700">
+                            AI: ${company.pe_investment_score > 80 ? 'Strong acquisition candidate' : 'Monitor for future opportunities'}
+                        </p>
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <button onclick="viewDetails('${company.uei}')" class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors text-sm font-medium">
+                            View Details
+                        </button>
+                        <button class="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition-colors text-sm font-medium">
+                            Compare
+                        </button>
+                        <button class="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition-colors text-sm font-medium">
+                            Add to List
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Search companies
+        async function searchCompanies(query) {
+            if (!query.trim()) {
+                fetchCompanies();
+                return;
+            }
+            
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE_URL}/companies/search?q=${encodeURIComponent(query)}`);
+                if (!response.ok) throw new Error('Search failed');
+                const data = await response.json();
+                companies = data.data || [];
+                document.getElementById('companiesTitle').textContent = `Search Results for "${query}"`;
+                renderCompanies();
+            } catch (error) {
+                console.error('Error searching companies:', error);
+                showError('Search failed');
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search functionality
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchCompanies(e.target.value);
+                }
+            });
+
+            // State filter
+            const stateSelect = document.getElementById('stateSelect');
+            stateSelect.addEventListener('change', (e) => {
+                selectedState = e.target.value;
+                if (selectedState) {
+                    fetchCompanies({ state: selectedState });
+                } else {
+                    fetchCompanies();
+                }
+                document.getElementById('companiesTitle').textContent = 'Top Investment Opportunities';
+            });
+        }
+
+        // Simulate AI activity
+        function simulateAIActivity() {
+            const aiIndicator = document.getElementById('aiIndicator');
+            
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    aiIndicator.innerHTML = `
+                        <span class="w-2 h-2 bg-white rounded-full mr-2"></span>
+                        AI Processing...
+                    `;
+                    
+                    setTimeout(() => {
+                        aiIndicator.innerHTML = `
+                            <span class="w-2 h-2 bg-white rounded-full mr-2"></span>
+                            AI Active
+                        `;
+                    }, 2000);
+                }
+            }, 5000);
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+        // Ensure companies are fetched when page loads
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", fetchCompanies);
+        } else {
+            fetchCompanies();
+        }
+    </script>
+<script>
+function viewDetails(uei) {
+    window.location.href = `company-details.html?uei=${encodeURIComponent(uei)}`;
+}
+        // Ensure companies are fetched when page loads
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", fetchCompanies);
+        } else {
+            fetchCompanies();
+        }
+</script>
+</body>
+</html>
+
+<script>
+// Add this function to handle View Details clicks
+function viewDetails(uei) {
+    window.location.href = `company-details.html?uei=${encodeURIComponent(uei)}`;
+}
+
+// Update the company rendering to include onclick
+document.addEventListener('DOMContentLoaded', function() {
+    // Override the renderCompanies function to add onclick
+    const originalRender = window.renderCompanies;
+    window.renderCompanies = function() {
+        const container = document.getElementById('companiesContainer');
+        
+        if (!companies || companies.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-2 text-center py-12 bg-white rounded-lg shadow">
+                    <svg class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-gray-500">No companies found</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = companies.map(company => `
+            <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-indigo-500">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">${company.organization_name || 'Unknown Company'}</h3>
+                        <p class="text-sm text-gray-600">
+                            ${company.city || 'N/A'}, ${company.state || 'N/A'} · NAICS: ${company.primary_naics || 'N/A'}
+                        </p>
+                    </div>
+                    <div class="px-3 py-1 rounded-full text-sm font-medium ${getGradeColor(company.business_health_grade)}">
+                        ${company.pe_investment_score?.toFixed(0) || 'N/A'} ${company.business_health_grade || ''}
+                    </div>
+                </div>
+
+                <div class="p-3 bg-purple-50 rounded border-l-4 border-purple-500 mb-4">
+                    <p class="text-sm text-purple-700">
+                        AI: ${company.pe_investment_score > 80 ? 'Strong acquisition candidate' : 'Monitor for future opportunities'}
+                    </p>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button onclick="viewDetails('${company.uei}')" class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors text-sm font-medium">
+                        View Details
+                    </button>
+                    <button class="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition-colors text-sm font-medium">
+                        Compare
+                    </button>
+                    <button class="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition-colors text-sm font-medium">
+                        Add to List
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    };
+});
+        // Ensure companies are fetched when page loads
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", fetchCompanies);
+        } else {
+            fetchCompanies();
+        }
+</script>

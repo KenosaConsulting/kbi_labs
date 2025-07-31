@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .info { background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 KBI Labs API Test - Static HTML</h1>
+    <p>Testing direct API connection without React/Vite complexity</p>
+    
+    <div id="status">🔄 Testing API connection...</div>
+    <div id="results"></div>
+
+    <script>
+        console.log('🚀 Starting API test...');
+
+        async function testAPI() {
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                console.log('📡 Fetching from API...');
+                statusDiv.innerHTML = '📡 Fetching data from API...';
+                
+                const response = await fetch('http://localhost:8001/api/v1/government-contractor/');
+                console.log('📊 Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Data received:', data);
+                
+                // Show success
+                statusDiv.innerHTML = '<div class="success">✅ API Connection Successful!</div>';
+                
+                // Display key metrics
+                const realData = data.realData || {};
+                resultsDiv.innerHTML = `
+                    <div class="info">
+                        <h3>📊 Key Metrics</h3>
+                        <p><strong>Total Companies:</strong> ${realData.totalCompanies || 'N/A'}</p>
+                        <p><strong>Avg Investment Score:</strong> ${realData.avgInvestmentScore || 'N/A'}</p>
+                        <p><strong>Companies with Patents:</strong> ${realData.companiesWithPatents || 'N/A'}</p>
+                        <p><strong>Total Patents:</strong> ${realData.totalPatents || 'N/A'}</p>
+                    </div>
+                    
+                    <h3>🔍 Raw API Response</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                console.error('❌ API test failed:', error);
+                statusDiv.innerHTML = `<div class="error">❌ API Connection Failed: ${error.message}</div>`;
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>Error Details</h3>
+                        <p>${error.message}</p>
+                        <p><strong>Common causes:</strong></p>
+                        <ul>
+                            <li>API server not running on port 8001</li>
+                            <li>CORS policy blocking the request</li>
+                            <li>Network connectivity issues</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        // Run test when page loads
+        testAPI();
+    </script>
+</body>
+</html>

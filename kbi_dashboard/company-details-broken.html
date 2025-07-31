@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Details - KBI Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .ai-loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .insight-card {
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .insight-card:nth-child(1) { animation-delay: 0.1s; }
+        .insight-card:nth-child(2) { animation-delay: 0.2s; }
+        .insight-card:nth-child(3) { animation-delay: 0.3s; }
+        .insight-card:nth-child(4) { animation-delay: 0.4s; }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .recommendation-badge {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .recommendation-badge::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-indigo-600">KBI Labs</h1>
+                    <span class="ml-2 text-sm text-gray-500">AI-Powered Intelligence Platform</span>
+                </div>
+                <a href="index.html" class="text-indigo-600 hover:text-indigo-800">
+                    ← Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Company Header -->
+        <div id="companyHeader" class="bg-white rounded-lg shadow p-6 mb-6">
+            <div class="flex items-center">
+                <div class="animate-pulse">
+                    <div class="h-8 w-64 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-4 w-48 bg-gray-200 rounded"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">PE Investment Score</p>
+                <p id="peScore" class="text-2xl font-bold text-gray-900">-</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Business Health Grade</p>
+                <p id="healthGrade" class="text-2xl font-bold text-gray-900">-</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Federal Contracts</p>
+                <p id="fedContracts" class="text-2xl font-bold text-gray-900">-</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Location</p>
+                <p id="location" class="text-2xl font-bold text-gray-900">-</p>
+            </div>
+        </div>
+
+        <!-- AI Insights Alert -->
+        <div id="aiInsightsAlert" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg shadow-lg p-4 mb-6 ai-loading">
+            <div class="flex items-center">
+                <svg class="animate-spin h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="font-medium">GPT-4 is analyzing this company...</span>
+            </div>
+        </div>
+
+        <!-- Detailed Information Tabs -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <button class="tab-button active py-4 px-6 border-b-2 border-indigo-500 text-indigo-600 font-medium" data-tab="overview">
+                        Overview
+                    </button>
+                    <button class="tab-button py-4 px-6 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-tab="financial">
+                        Financial & Contracts
+                    </button>
+                    <button class="tab-button py-4 px-6 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-tab="intelligence">
+                        Market Intelligence
+                    </button>
+                    <button class="tab-button py-4 px-6 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium relative" data-tab="ai-insights">
+                        AI Insights
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                            New
+                        </span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Overview Tab -->
+                <div id="overview-tab" class="tab-content active">
+                    <h3 class="text-lg font-semibold mb-4">Company Overview</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Basic Information</h4>
+                            <dl class="space-y-2">
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">UEI:</dt>
+                                    <dd id="uei" class="font-mono text-sm">-</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">NAICS Code:</dt>
+                                    <dd id="naics">-</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">SAM Status:</dt>
+                                    <dd id="samStatus">-</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">CAGE Code:</dt>
+                                    <dd id="cageCode">-</dd>
+                                </div>
+                            </dl>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Contact Information</h4>
+                            <dl class="space-y-2">
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">Phone:</dt>
+                                    <dd id="phone">-</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">Email:</dt>
+                                    <dd id="email">-</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">Website:</dt>
+                                    <dd id="website">-</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Tab -->
+                <div id="financial-tab" class="tab-content">
+                    <h3 class="text-lg font-semibold mb-4">Financial & Contracts</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 rounded p-4">
+                            <h4 class="font-medium text-gray-700 mb-2">Federal Contracts</h4>
+                            <dl class="space-y-2">
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">Total Contracts:</dt>
+                                    <dd id="contractCount" class="font-bold">-</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">Total Value:</dt>
+                                    <dd id="contractValue" class="font-bold text-green-600">-</dd>
+                                </div>
+                            </dl>
+                        </div>
+                        <div class="bg-gray-50 rounded p-4">
+                            <h4 class="font-medium text-gray-700 mb-2">Economic Indicators</h4>
+                            <dl class="space-y-2">
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">State GDP:</dt>
+                                    <dd id="stateGdp">-</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="text-gray-600">State Population:</dt>
+                                    <dd id="statePopulation">-</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <canvas id="contractChart" class="w-full h-64"></canvas>
+                    </div>
+                </div>
+
+                <!-- Market Intelligence Tab -->
+                <div id="intelligence-tab" class="tab-content">
+                    <h3 class="text-lg font-semibold mb-4">Market Intelligence</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-blue-50 rounded p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium text-blue-700">Patents</h4>
+                                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                            </div>
+                            <p id="patentCount" class="text-2xl font-bold text-blue-700">-</p>
+                            <p class="text-sm text-blue-600 mt-1">Intellectual Property</p>
+                        </div>
+                        <div class="bg-green-50 rounded p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium text-green-700">NSF Funding</h4>
+                                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <p id="nsfFunding" class="text-2xl font-bold text-green-700">-</p>
+                            <p class="text-sm text-green-600 mt-1">Research Grants</p>
+                        </div>
+                        <div class="bg-purple-50 rounded p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium text-purple-700">Certifications</h4>
+                                <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                </svg>
+                            </div>
+                            <p id="certCount" class="text-2xl font-bold text-purple-700">-</p>
+                            <p class="text-sm text-purple-600 mt-1">Active Certifications</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Insights Tab -->
+                <div id="ai-insights-tab" class="tab-content">
+                    <div id="aiInsightsContent" class="min-h-[400px]">
+                        <!-- Loading state -->
+                        <div class="flex items-center justify-center py-12">
+                            <div class="text-center">
+                                <svg class="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <p class="text-gray-600">Generating AI insights...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-6 flex gap-4">
+            <button class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                Generate Report
+            </button>
+            <button class="flex-1 bg-white text-indigo-600 px-6 py-3 rounded-lg border border-indigo-600 hover:bg-indigo-50 transition-colors font-medium">
+                Add to Watchlist
+            </button>
+            <button class="flex-1 bg-white text-gray-700 px-6 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors font-medium">
+                Compare with Others
+            </button>
+        </div>
+    </main>
+
+    <script>
+        // Configuration
+        const API_BASE = 'http://3.143.232.123:5000/api';
+        const AI_API_BASE = 'http://3.143.232.123:5001/api';
+        
+        // Global variables
+        let currentCompany = null;
+        let aiInsights = null;
+
+        // Tab functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tab = button.dataset.tab;
+                
+                // Update button states
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active', 'border-indigo-500', 'text-indigo-600');
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                });
+                button.classList.remove('border-transparent', 'text-gray-500');
+                button.classList.add('active', 'border-indigo-500', 'text-indigo-600');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`${tab}-tab`).classList.add('active');
+                
+                // Load AI insights when tab is clicked
+                if (tab === 'ai-insights' && currentCompany && !aiInsights) {
+                    loadAIInsights();
+                }
+            });
+        });
+
+        // Load company details
+        async function loadCompanyDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const uei = urlParams.get('uei');
+            
+            if (!uei) {
+                showError('No company specified');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/companies/${uei}`);
+                if (!response.ok) throw new Error('Company not found');
+                
+                const company = await response.json();
+                currentCompany = company;
+                displayCompanyDetails(company);
+                
+                // Start loading AI insights in the background
+                loadAIInsights();
+                
+            } catch (error) {
+                console.error('Error loading company details:', error);
+                showError('Failed to load company details');
+            }
+        }
+
+        // Display company details
+        function displayCompanyDetails(company) {
+            // Header
+            document.getElementById('companyHeader').innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">${company.organization_name || 'Unknown Company'}</h1>
+                        <p class="text-gray-600">${company.city || 'N/A'}, ${company.state || 'N/A'} · NAICS: ${company.primary_naics || 'N/A'}</p>
+                    </div>
+                    <div class="px-4 py-2 rounded-full text-lg font-medium ${getGradeColor(company.business_health_grade)}">
+                        ${company.pe_investment_score?.toFixed(0) || 'N/A'} ${company.business_health_grade || ''}
+                    </div>
+                </div>
+            `;
+            
+            // Key Metrics
+            document.getElementById('peScore').textContent = company.pe_investment_score?.toFixed(1) || 'N/A';
+            document.getElementById('healthGrade').textContent = company.business_health_grade || 'N/A';
+            document.getElementById('fedContracts').textContent = company.federal_contracts_count || '0';
+            document.getElementById('location').textContent = `${company.state || 'N/A'}`;
+            
+            // Overview Tab
+            document.getElementById('uei').textContent = company.uei || 'N/A';
+            document.getElementById('naics').textContent = company.primary_naics || 'N/A';
+            document.getElementById('samStatus').textContent = company.sam_registration_status || 'N/A';
+            document.getElementById('cageCode').textContent = company.cage_code || 'N/A';
+            
+            document.getElementById('phone').textContent = company.phone_number || 'N/A';
+            document.getElementById('email').textContent = company.email || 'N/A';
+            document.getElementById('website').textContent = company.website || 'N/A';
+            
+            // Financial Tab
+            document.getElementById('contractCount').textContent = company.federal_contracts_count || '0';
+            document.getElementById('contractValue').textContent = company.federal_contracts_value ? 
+                `$${(company.federal_contracts_value / 1000000).toFixed(2)}M` : 'N/A';
+            document.getElementById('stateGdp').textContent = company.state_gdp_billions ? 
+                `$${company.state_gdp_billions.toFixed(1)}B` : 'N/A';
+            document.getElementById('statePopulation').textContent = company.state_population ? 
+                `${(company.state_population / 1000000).toFixed(1)}M` : 'N/A';
+            
+            // Market Intelligence Tab
+            document.getElementById('patentCount').textContent = company.patent_count || '0';
+            document.getElementById('nsfFunding').textContent = company.nsf_total_funding ? 
+                `$${(company.nsf_total_funding / 1000).toFixed(0)}K` : '$0';
+            document.getElementById('certCount').textContent = company.certifications?.length || '0';
+            
+            // Create contract trend chart
+            createContractChart(company);
+        }
+
+        // Load AI insights
+        async function loadAIInsights() {
+            if (!currentCompany) return;
+            
+            try {
+                // Update alert
+                document.getElementById('aiInsightsAlert').innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="animate-spin h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="font-medium">GPT-4 is analyzing ${currentCompany.organization_name}...</span>
+                    </div>
+                `;
+                
+                // Call AI insights API
+                const queryParams = new URLSearchParams({
+                    name: currentCompany.organization_name,
+                    score: currentCompany.pe_investment_score || 0,
+                    grade: currentCompany.business_health_grade || 'N/A',
+                    contracts: currentCompany.federal_contracts_count || 0,
+                    value: currentCompany.federal_contracts_value || 0,
+                    city: currentCompany.city || 'N/A',
+                    state: currentCompany.state || 'N/A',
+                    naics: currentCompany.primary_naics || 'N/A',
+                    patents: currentCompany.patent_count || 0,
+                    nsf: currentCompany.nsf_total_funding || 0
+                });
+                
+                const response = await fetch(`${AI_API_BASE}/insights/${currentCompany.uei}?${queryParams}`);
+                if (!response.ok) throw new Error('Failed to generate insights');
+                
+                const result = await response.json();
+                if (result.success) {
+                    aiInsights = result.data;
+                    displayAIInsights(result.data);
+                    
+                    // Update alert to success
+                    document.getElementById('aiInsightsAlert').innerHTML = `
+                        <div class="flex items-center">
+                            <svg class="h-5 w-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="font-medium">AI Analysis Complete - ${new Date().toLocaleTimeString()}</span>
+                        </div>
+                    `;
+                    document.getElementById('aiInsightsAlert').classList.remove('ai-loading');
+                }
+                
+            } catch (error) {
+                console.error('Error loading AI insights:', error);
+                
+                // Fallback to simulated insights
+                generateSimulatedInsights();
+            }
+        }
+
+        // Display AI insights
+        function displayAIInsights(insights) {
+            const recommendationColors = {
+                'Strong Buy': 'bg-green-100 text-green-800 border-green-300',
+                'Buy': 'bg-blue-100 text-blue-800 border-blue-300',
+                'Hold': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                'Sell': 'bg-red-100 text-red-800 border-red-300'
+            };
+            
+            const content = `
+                <!-- Investment Recommendation -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold">Investment Analysis</h3>
+                        <div class="recommendation-badge px-6 py-3 rounded-lg border-2 font-bold text-lg ${recommendationColors[insights.recommendation] || 'bg-gray-100'}">
+                            ${insights.recommendation}
+                        </div>
+                    </div>
+                    
+                    <!-- Score Visualization -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="text-center">
+                            <div class="relative inline-block">
+                                <svg class="progress-ring w-32 h-32">
+                                    <circle class="text-gray-200" stroke="currentColor" stroke-width="8" fill="none" r="56" cx="64" cy="64"></circle>
+                                    <circle class="progress-ring-circle text-indigo-600" stroke="currentColor" stroke-width="8" fill="none" r="56" cx="64" cy="64"
+                                        style="stroke-dasharray: ${56 * 2 * Math.PI}; stroke-dashoffset: ${56 * 2 * Math.PI * (1 - insights.investment_score / 100)}">
+                                    </circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-2xl font-bold">${insights.investment_score.toFixed(0)}</span>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-600">Investment Score</p>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="relative inline-block">
+                                <svg class="progress-ring w-32 h-32">
+                                    <circle class="text-gray-200" stroke="currentColor" stroke-width="8" fill="none" r="56" cx="64" cy="64"></circle>
+                                    <circle class="progress-ring-circle text-purple-600" stroke="currentColor" stroke-width="8" fill="none" r="56" cx="64" cy="64"
+                                        style="stroke-dasharray: ${56 * 2 * Math.PI}; stroke-dashoffset: ${56 * 2 * Math.PI * (1 - insights.innovation_score / 100)}">
+                                    </circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-2xl font-bold">${insights.innovation_score.toFixed(0)}</span>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-600">Innovation Score</p>
+                        </div>
+                        
+                        <div class="text-center flex flex-col items-center justify-center">
+                            <div class="text-3xl font-bold ${insights.financial_health === 'Strong' ? 'text-green-600' : insights.financial_health === 'Stable' ? 'text-blue-600' : 'text-yellow-600'}">
+                                ${insights.financial_health}
+                            </div>
+                            <p class="mt-2 text-sm text-gray-600">Financial Health</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Sections -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Key Strengths -->
+                    <div class="insight-card bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6">
+                        <h4 class="font-semibold text-green-800 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 100 4h2a2 2 0 100 4h-2a1 1 0 100 2 2 2 0 01-2-2v-1a2 2 0 01-2-2V7a2 2 0 012-2h8a1 1 0 110 2H6a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 012-2h2a1 1 0 110 2h-2v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7z" clip-rule="evenodd"></path>
+                            </svg>
+                            Key Strengths
+                        </h4>
+                        <ul class="space-y-2">
+                            ${insights.key_strengths.map(strength => `
+                                <li class="flex items-start">
+                                    <span class="text-green-600 mr-2">•</span>
+                                    <span class="text-gray-700">${strength}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <!-- Growth Opportunities -->
+                    <div class="insight-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
+                        <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm9 0a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0V6h-1a1 1 0 110-2h1V3a1 1 0 011-1zM5 11a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zm9 0a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            Growth Opportunities
+                        </h4>
+                        <ul class="space-y-2">
+                            ${insights.growth_opportunities.map(opportunity => `
+                                <li class="flex items-start">
+                                    <span class="text-blue-600 mr-2">•</span>
+                                    <span class="text-gray-700">${opportunity}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <!-- Risk Factors -->
+                    <div class="insight-card bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-6">
+                        <h4 class="font-semibold text-red-800 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            Risk Factors
+                        </h4>
+                        <ul class="space-y-2">
+                            ${insights.risk_factors.map(risk => `
+                                <li class="flex items-start">
+                                    <span class="text-red-600 mr-2">•</span>
+                                    <span class="text-gray-700">${risk}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <!-- Competitive Advantages -->
+                    <div class="insight-card bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
+                        <h4 class="font-semibold text-purple-800 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"></path>
+                            </svg>
+                            Competitive Advantages
+                        </h4>
+                        <ul class="space-y-2">
+                            ${insights.competitive_advantages.map(advantage => `
+                                <li class="flex items-start">
+                                    <span class="text-purple-600 mr-2">•</span>
+                                    <span class="text-gray-700">${advantage}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Action Items -->
+                <div class="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6">
+                    <h4 class="font-semibold text-indigo-800 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 100 4h2a2 2 0 100 4h-2a1 1 0 100 2 2 2 0 01-2-2v-1a2 2 0 01-2-2V7a2 2 0 012-2h8a1 1 0 110 2H6a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 012-2h2a1 1 0 110 2h-2v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7z" clip-rule="evenodd"></path>
+                        </svg>
+                        Recommended Actions
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${insights.action_items.map((action, index) => `
+                            <div class="flex items-start bg-white rounded p-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                                    ${index + 1}
+                                </span>
+                                <span class="text-gray-700">${action}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Market Position -->
+                <div class="mt-6 flex items-center justify-between bg-gray-50 rounded-lg p-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Market Position</p>
+                        <p class="text-lg font-semibold text-gray-900">${insights.market_position}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500">Analysis Generated</p>
+                        <p class="text-sm text-gray-600">${new Date(insights.generated_at).toLocaleString()}</p>
+                    </div>
+                </div>
+
+                <!-- ESG Considerations -->
+                ${insights.esg_considerations && insights.esg_considerations.length > 0 ? `
+                    <div class="mt-6 bg-green-50 rounded-lg p-4">
+                        <h4 class="font-medium text-green-800 mb-2">ESG Considerations</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            ${insights.esg_considerations.map(esg => `
+                                <li>• ${esg}</li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('aiInsightsContent').innerHTML = content;
+        }
+
+        // Generate simulated insights (fallback)
+        function generateSimulatedInsights() {
+            const score = currentCompany?.pe_investment_score || 50;
+            const grade = currentCompany?.business_health_grade || 'C';
+            
+            const insights = {
+                investment_score: score,
+                recommendation: score >= 80 ? 'Strong Buy' : score >= 60 ? 'Buy' : score >= 40 ? 'Hold' : 'Sell',
+                key_strengths: [
+                    'Established federal contractor with proven track record',
+                    'Strong financial metrics relative to industry peers',
+                    'Strategic location with access to key markets'
+                ],
+                growth_opportunities: [
+                    'Expand into adjacent federal agencies',
+                    'Leverage technology for operational efficiency',
+                    'Strategic acquisitions in complementary sectors'
+                ],
+                risk_factors: [
+                    'Dependency on federal contracts',
+                    'Competitive market landscape',
+                    'Economic uncertainty affecting budget allocations'
+                ],
+                market_position: 'Established Player',
+                competitive_advantages: [
+                    'Long-standing government relationships',
+                    'Specialized domain expertise',
+                    'Strong past performance ratings'
+                ],
+                action_items: [
+                    'Schedule due diligence review',
+                    'Analyze contract pipeline',
+                    'Assess management team',
+                    'Review financial projections'
+                ],
+                financial_health: score >= 70 ? 'Strong' : score >= 50 ? 'Stable' : 'Needs Improvement',
+                innovation_score: Math.min(score + 10, 100),
+                esg_considerations: ['Environmental compliance programs in place'],
+                generated_at: new Date().toISOString()
+            };
+            
+            aiInsights = insights;
+            displayAIInsights(insights);
+            
+            // Update alert
+            document.getElementById('aiInsightsAlert').innerHTML = `
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="font-medium">Using simulated insights (Connect to GPT-4 API for real analysis)</span>
+                </div>
+            `;
+            document.getElementById('aiInsightsAlert').classList.remove('ai-loading');
+            document.getElementById('aiInsightsAlert').classList.remove('from-indigo-500', 'to-purple-600');
+            document.getElementById('aiInsightsAlert').classList.add('bg-yellow-100', 'text-yellow-800');
+        }
+
+        // Create contract trend chart
+        function createContractChart(company) {
+            const ctx = document.getElementById('contractChart');
+            if (!ctx) return;
+            
+            // Simulated monthly data (in production, this would come from the API)
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            const contractValues = months.map(() => Math.random() * 500000 + 100000);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Contract Value ($)',
+                        data: contractValues,
+                        borderColor: 'rgb(99, 102, 241)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return ' + (value / 1000).toFixed(0) + 'K';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Get grade color
+        function getGradeColor(grade) {
+            const colors = {
+                'A': 'bg-green-100 text-green-800',
+                'B': 'bg-blue-100 text-blue-800',
+                'C': 'bg-yellow-100 text-yellow-800',
+                'D': 'bg-orange-100 text-orange-800',
+                'F': 'bg-red-100 text-red-800'
+            };
+            return colors[grade] || 'bg-gray-100 text-gray-800';
+        }
+
+        // Show error
+        function showError(message) {
+            document.getElementById('companyHeader').innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-red-600">${message}</p>
+                    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 mt-4 inline-block">
+                        Return to Dashboard
+                    </a>
+                </div>
+            `;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadCompanyDetails);
+    </script>
+</body>
+</html>
