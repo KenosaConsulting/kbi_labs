@@ -1,0 +1,53 @@
+"""
+KBI Labs FastAPI Application
+Main entry point for the API
+"""
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from src.api.v2.intelligence import router as intelligence_router
+from fastapi.middleware.cors import CORSMiddleware
+from .api.v1.api import api_router
+
+# Create FastAPI app
+app = FastAPI(
+    title="KBI Labs - Compass Platform",
+    description="SMB Intelligence and Business Discovery Platform",
+    version="1.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure this for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Include API router
+app.include_router(api_router, prefix="/api/v1")
+app.include_router(intelligence_router)
+
+# Health check endpoint
+@app.get("/")
+async def root():
+    return {
+        "message": "KBI Labs Compass Platform API", 
+        "status": "operational",
+        "endpoints": {
+            "companies": "/api/v1/companies/",
+            "insights": "/api/v1/companies/compass/insights",
+            "stats": "/api/v1/companies/stats/by-state",
+            "demos": {
+                "simple": "/static/simple_demo.html",
+                "enhanced": "/static/enhanced_demo.html"
+            }
+        }
+    }
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}

@@ -1,0 +1,40 @@
+{
+  "tiers": {
+    "trial": {
+      "name": "Free Trial",
+      "rate_limit": 100,
+      "duration": "1d",
+      "allowed_endpoints": ["/stats"],
+      "geographic_limit": "sample_only",
+      "price": "$0"
+    },
+    "basic": {
+      "name": "City Explorer",
+      "rate_limit": 1000,
+      "duration": "1d",
+      "allowed_endpoints": ["all"],
+      "geographic_limit": "single_city",
+      "export_limit": 100,
+      "price": "$99/month"
+    },
+    "professional": {
+      "name": "State Hunter",
+      "rate_limit": 10000,
+      "duration": "1d",
+      "allowed_endpoints": ["all"],
+      "geographic_limit": "single_state",
+      "export_limit": 1000,
+      "price": "$299/month"
+    },
+    "enterprise": {
+      "name": "National Dominator",
+      "rate_limit": 100000,
+      "duration": "1d",
+      "allowed_endpoints": ["all"],
+      "geographic_limit": "unlimited",
+      "export_limit": "unlimited",
+      "webhook_support": true,
+      "price": "$999/month"
+    }
+  }
+}

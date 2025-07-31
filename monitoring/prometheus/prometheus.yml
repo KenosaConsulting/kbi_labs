@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # KBI API metrics (running on host)
+  - job_name: 'kbi_api'
+    static_configs:
+      - targets: ['172.31.22.218:8001']
+    metrics_path: '/metrics'
+
+  # Node Exporter (running in container)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node_exporter:9100']
+
+rule_files:
+  - 'alerts.yml'

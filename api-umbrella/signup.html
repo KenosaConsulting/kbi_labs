@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KBI Labs API - Digital Gap Analyzer</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .tier { border: 1px solid #ddd; padding: 20px; margin: 10px 0; border-radius: 5px; }
+        .tier h3 { margin-top: 0; }
+        .price { font-size: 24px; font-weight: bold; color: #2ecc71; }
+        button { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Digital Gap Analyzer API</h1>
+    <p>Access data on 64,799 companies • 30,531 without websites • $763M opportunity</p>
+    
+    <div class="tier">
+        <h3>🆓 Free Trial</h3>
+        <p class="price">$0</p>
+        <ul>
+            <li>100 API calls/day</li>
+            <li>Statistics endpoint only</li>
+            <li>Sample data access</li>
+        </ul>
+        <button onclick="signup('trial')">Start Free Trial</button>
+    </div>
+    
+    <div class="tier">
+        <h3>🏙️ City Explorer</h3>
+        <p class="price">$99/month</p>
+        <ul>
+            <li>1,000 API calls/day</li>
+            <li>Single city access</li>
+            <li>Export up to 100 companies/day</li>
+            <li>Contact information included</li>
+        </ul>
+        <button onclick="signup('basic')">Start City Explorer</button>
+    </div>
+    
+    <div class="tier">
+        <h3>🗺️ State Hunter</h3>
+        <p class="price">$299/month</p>
+        <ul>
+            <li>10,000 API calls/day</li>
+            <li>Full state access</li>
+            <li>Export up to 1,000 companies/day</li>
+            <li>Priority support</li>
+        </ul>
+        <button onclick="signup('professional')">Start State Hunter</button>
+    </div>
+    
+    <div class="tier">
+        <h3>🚀 National Dominator</h3>
+        <p class="price">$999/month</p>
+        <ul>
+            <li>100,000 API calls/day</li>
+            <li>Full national access</li>
+            <li>Unlimited exports</li>
+            <li>Webhook support</li>
+            <li>Dedicated account manager</li>
+        </ul>
+        <button onclick="signup('enterprise')">Contact Sales</button>
+    </div>
+    
+    <script>
+        function signup(tier) {
+            window.location.href = `/signup?tier=${tier}`;
+        }
+    </script>
+</body>
+</html>

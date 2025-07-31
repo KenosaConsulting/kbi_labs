@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBI Labs - Authentication</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+        }
+        
+        .auth-box {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid #333;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .secondary-btn {
+            background: transparent;
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+        
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .success {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+        }
+        
+        .error {
+            background: rgba(255, 68, 68, 0.2);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+        
+        .dashboard {
+            display: none;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #0a0a0a;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .api-key-item {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+        }
+        
+        .toggle-link a {
+            color: #00ff88;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>KBI Labs Platform</h1>
+        
+        <div class="auth-box" id="authBox">
+            <h2 id="formTitle">Login</h2>
+            <form id="authForm">
+                <div class="form-group" id="emailGroup" style="display: none;">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" id="submitBtn">Login</button>
+            </form>
+            <div class="toggle-link">
+                <span id="toggleText">Don't have an account?</span>
+                <a onclick="toggleForm()">Register</a>
+            </div>
+            <div id="message"></div>
+        </div>
+        
+        <div class="dashboard" id="dashboard">
+            <div class="auth-box" style="max-width: 800px;">
+                <h2>Welcome, <span id="userName"></span>!</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="userTier">Free</div>
+                        <div class="stat-label">Subscription Tier</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="apiCalls">0</div>
+                        <div class="stat-label">API Calls Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="apiKeys">0</div>
+                        <div class="stat-label">Active API Keys</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin: 20px 0;">API Keys</h3>
+                <div id="apiKeysList"></div>
+                <button onclick="createNewApiKey()" class="secondary-btn">Generate New API Key</button>
+                
+                <button onclick="logout()" style="background: #ff4444; margin-top: 30px;">Logout</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let isLogin = true;
+        let authToken = localStorage.getItem('kbi_auth_token');
+        let currentUser = null;
+        
+        // Check if already logged in
+        if (authToken) {
+            verifyAndShowDashboard();
+        }
+        
+        function toggleForm() {
+            isLogin = !isLogin;
+            document.getElementById('formTitle').textContent = isLogin ? 'Login' : 'Register';
+            document.getElementById('emailGroup').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('email').required = !isLogin;
+            document.getElementById('submitBtn').textContent = isLogin ? 'Login' : 'Register';
+            document.getElementById('toggleText').textContent = isLogin ? "Don't have an account?" : "Already have an account?";
+        }
+        
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+            const data = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+            
+            if (!isLogin) {
+                data.email = document.getElementById('email').value;
+            }
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    authToken = result.access_token;
+                    localStorage.setItem('kbi_auth_token', authToken);
+                    currentUser = result;
+                    showMessage('Success! Loading dashboard...', 'success');
+                    setTimeout(() => showDashboard(), 1000);
+                } else {
+                    showMessage(result.detail || 'Authentication failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        });
+        
+        async function verifyAndShowDashboard() {
+            try {
+                const response = await fetch('/api/auth/verify', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data;
+                    showDashboard();
+                } else {
+                    localStorage.removeItem('kbi_auth_token');
+                    authToken = null;
+                }
+            } catch (error) {
+                console.error('Verification failed:', error);
+            }
+        }
+        
+        function showDashboard() {
+            document.getElementById('authBox').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userName').textContent = currentUser.username || 'User';
+            document.getElementById('userTier').textContent = 
+                (currentUser.subscription_tier || 'free').charAt(0).toUpperCase() + 
+                (currentUser.subscription_tier || 'free').slice(1);
+        }
+        
+        async function createNewApiKey() {
+            const name = prompt('Enter a name for this API key:');
+            if (!name) return;
+            
+            try {
+                const response = await fetch('/api/auth/api-keys?name=' + encodeURIComponent(name), {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const keyDiv = document.createElement('div');
+                    keyDiv.className = 'api-key-item';
+                    keyDiv.innerHTML = `<span>${name}: ${result.api_key}</span>`;
+                    document.getElementById('apiKeysList').appendChild(keyDiv);
+                    showMessage('API key created! Copy it now - it won\'t be shown again.', 'success');
+                } else {
+                    showMessage(result.detail || 'Failed to create API key', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('kbi_auth_token');
+            location.reload();
+        }
+        
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.className = `message ${type}`;
+            msg.textContent = text;
+            setTimeout(() => msg.className = '', 5000);
+        }
+    </script>
+</body>
+</html>
