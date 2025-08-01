@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SMB Intelligence Platform Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .role-selector {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .role-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .role-button.active {
+            background-color: #2196F3;
+        }
+        .search-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .search-button {
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .company-card {
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            border-left: 4px solid #2196F3;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SMB Intelligence Platform</h1>
+        
+        <div class="role-selector">
+            <h2>Select Your Role</h2>
+            <button class="role-button" onclick="setRole('pe_firm')">👔 I'm a PE Firm</button>
+            <button class="role-button active" onclick="setRole('smb_owner')">🏢 I'm an SMB Owner</button>
+            <p id="current-role">Current role: SMB Owner</p>
+        </div>
+
+        <div class="search-section">
+            <h2>Search Companies</h2>
+            <button class="search-button" onclick="searchCompanies('Florida')">Search Florida Companies</button>
+            <button class="search-button" onclick="searchCompanies('Texas')">Search Texas Companies</button>
+            <button class="search-button" onclick="searchCompanies('Virginia')">Search Virginia Companies</button>
+            <div id="search-results" class="results"></div>
+        </div>
+
+        <div class="search-section">
+            <h2>Market Insights</h2>
+            <button class="search-button" onclick="getInsights()">Get Market Insights</button>
+            <div id="insights-results" class="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://3.143.232.123:8000';
+        let currentRole = 'smb_owner';
+
+        function setRole(role) {
+            currentRole = role;
+            document.getElementById('current-role').textContent = `Current role: ${role === 'pe_firm' ? 'PE Firm' : 'SMB Owner'}`;
+            document.querySelectorAll('.role-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        async function searchCompanies(state) {
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = '<div class="loading">Loading companies...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/companies/?state=${state}&limit=10`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                
+                if (data.companies && data.companies.length > 0) {
+                    let html = `<h3>Found ${data.companies.length} companies in ${state}</h3>`;
+                    data.companies.forEach(company => {
+                        html += `
+                            <div class="company-card">
+                                <h4>${company.organization_name}</h4>
+                                <p><strong>Location:</strong> ${company.state || 'N/A'}</p>
+                                <p><strong>NAICS:</strong> ${company.naics_code || 'N/A'}</p>
+                                <p><strong>Email:</strong> ${company.email || 'Not available'}</p>
+                                ${company.succession_risk_score ? `<p><strong>Risk Score:</strong> ${company.succession_risk_score}/10</p>` : ''}
+                            </div>
+                        `;
+                    });
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<p>No companies found.</p>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function getInsights() {
+            const resultsDiv = document.getElementById('insights-results');
+            resultsDiv.innerHTML = '<div class="loading">Loading insights...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/companies/compass/insights`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                
+                let html = '<h3>Market Overview</h3>';
+                html += '<div class="company-card">';
+                html += `<p><strong>Total Companies:</strong> ${data.market_overview.total_companies}</p>`;
+                html += `<p><strong>Average Revenue:</strong> $${data.market_overview.average_revenue.toLocaleString()}</p>`;
+                html += `<p><strong>High Risk Companies:</strong> ${data.market_overview.high_succession_risk}</p>`;
+                html += `<p><strong>Risk Percentage:</strong> ${data.market_overview.risk_percentage}%</p>`;
+                html += '</div>';
+                
+                resultsDiv.innerHTML = html;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Test connection on load
+        window.onload = () => {
+            console.log('Demo loaded, API base:', API_BASE);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: kbi_postgres
+    environment:
+      POSTGRES_DB: kbi_labs
+      POSTGRES_USER: kbi_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-defaultpassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kbi_network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7.0
+    container_name: kbi_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: kbi_user
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-defaultpassword}
+      MONGO_INITDB_DATABASE: kbi_labs
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - kbi_network
+    restart: unless-stopped
+
+  neo4j:
+    image: neo4j:5.11
+    container_name: kbi_neo4j
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-defaultpassword}
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    networks:
+      - kbi_network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: kbi_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - kbi_network
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: kbi_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kbi_network
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kbi_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - kbi_network
+    restart: unless-stopped
+
+  api:
+    build: .
+    container_name: kbi_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://kbi_user:${POSTGRES_PASSWORD:-defaultpassword}@postgres:5432/kbi_labs
+      - MONGO_URL=mongodb://kbi_user:${MONGO_PASSWORD:-defaultpassword}@mongodb:27017/kbi_labs
+      - NEO4J_URL=bolt://neo4j:7687
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKER=kafka:9092
+      - ENVIRONMENT=development
+    depends_on:
+      - postgres
+      - mongodb
+      - neo4j
+      - redis
+      - kafka
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+    networks:
+      - kbi_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  mongo_data:
+  neo4j_data:
+  redis_data:
+
+networks:
+  kbi_network:
+    driver: bridge
+
+  api_umbrella:
+    image: nrel/api-umbrella:0.15.1
+    container_name: kbi_api_umbrella
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "3001:3001"  # Admin UI port
+    volumes:
+      - ./api-umbrella/config:/etc/api-umbrella
+      - api-umbrella-data:/var/db/api-umbrella
+    environment:
+      - API_UMBRELLA_CONFIG=/etc/api-umbrella/api-umbrella.yml
+    depends_on:
+      - kbi_api
+    networks:
+      - kbi_network
+
+volumes:
+  api-umbrella-data:
+
+networks:
+  kbi_network:
+    driver: bridge
+
+  api_umbrella:
+    image: nrel/api-umbrella:0.15.1
+    container_name: kbi_api_umbrella
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "3001:3001"
+    volumes:
+      - ./api-umbrella/config:/etc/api-umbrella
+      - api_umbrella_data:/var/db/api-umbrella
+      - api_umbrella_log:/var/log/api-umbrella
+    environment:
+      - API_UMBRELLA_CONFIG=/etc/api-umbrella/api-umbrella.yml
+    depends_on:
+      - kbi_api
+      - kbi_mongodb
+
+volumes:
+  api_umbrella_data:
+  api_umbrella_log:

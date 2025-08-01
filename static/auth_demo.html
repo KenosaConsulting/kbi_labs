@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBI Labs - Authentication</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .auth-container {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #333;
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+        }
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+        }
+        .toggle-link a {
+            color: #00ff88;
+            text-decoration: none;
+        }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .success {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+        }
+        .error {
+            background: rgba(255, 68, 68, 0.2);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+        .user-info {
+            background: #0a0a0a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .api-key {
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h2 id="formTitle">Login to KBI Labs</h2>
+        
+        <div id="authForm">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group" id="emailGroup" style="display: none;">
+                    <label for="email">Email</label>
+                    <input type="email" id="email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" id="submitBtn">Login</button>
+            </form>
+            
+            <div class="toggle-link">
+                <span id="toggleText">Don't have an account?</span>
+                <a href="#" id="toggleLink" onclick="toggleForm()">Register</a>
+            </div>
+        </div>
+        
+        <div id="userDashboard" style="display: none;">
+            <h3>Welcome, <span id="userUsername"></span>!</h3>
+            <div class="user-info">
+                <p>Subscription: <strong id="userTier"></strong></p>
+                <p>User ID: <strong id="userId"></strong></p>
+                <button onclick="createApiKey()">Generate API Key</button>
+                <div id="apiKeys"></div>
+                <button onclick="logout()" style="background: #ff4444; margin-top: 20px;">Logout</button>
+            </div>
+        </div>
+        
+        <div id="message"></div>
+    </div>
+    
+    <script>
+        let isLogin = true;
+        let authToken = localStorage.getItem('kbi_token');
+        let currentUser = null;
+        
+        // Check if user is already logged in
+        if (authToken) {
+            showDashboard();
+        }
+        
+        function toggleForm() {
+            isLogin = !isLogin;
+            document.getElementById('formTitle').textContent = isLogin ? 'Login to KBI Labs' : 'Register for KBI Labs';
+            document.getElementById('emailGroup').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('submitBtn').textContent = isLogin ? 'Login' : 'Register';
+            document.getElementById('toggleText').textContent = isLogin ? "Don't have an account?" : "Already have an account?";
+            document.getElementById('toggleLink').textContent = isLogin ? 'Register' : 'Login';
+            document.getElementById('email').required = !isLogin;
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+            
+            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+            const body = isLogin ? { username, password } : { username, password, email };
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.access_token;
+                    localStorage.setItem('kbi_token', authToken);
+                    currentUser = data;
+                    showMessage('Success! Redirecting...', 'success');
+                    setTimeout(() => showDashboard(), 1000);
+                } else {
+                    showMessage(data.detail || 'Authentication failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        });
+        
+        function showDashboard() {
+            document.getElementById('authForm').style.display = 'none';
+            document.getElementById('userDashboard').style.display = 'block';
+            
+            // Fetch user info
+            fetch('/api/auth/usage-stats', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('userUsername').textContent = 'User';
+                document.getElementById('userTier').textContent = data.subscription_tier;
+                document.getElementById('userId').textContent = data.user_id;
+            });
+        }
+        
+        async function createApiKey() {
+            const name = prompt('Enter a name for this API key:');
+            if (!name) return;
+            
+            try {
+                const response = await fetch('/api/auth/api-keys', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const keyDiv = document.createElement('div');
+                    keyDiv.className = 'api-key';
+                    keyDiv.innerHTML = `<strong>${data.name}:</strong><br>${data.api_key}`;
+                    document.getElementById('apiKeys').appendChild(keyDiv);
+                    showMessage('API key created! Save it securely.', 'success');
+                } else {
+                    showMessage(data.detail || 'Failed to create API key', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('kbi_token');
+            location.reload();
+        }
+        
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = text;
+            setTimeout(() => messageDiv.className = '', 5000);
+        }
+    </script>
+</body>
+</html>

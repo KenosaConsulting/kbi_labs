@@ -1,0 +1,44 @@
+# Basic API Umbrella Configuration for KBI Labs
+mongodb:
+  url: "mongodb://kbi_mongodb:27017/api_umbrella"
+
+elasticsearch:
+  hosts:
+    - "http://localhost:9200"
+
+services:
+  - general_db_config:
+      connection_options:
+        migrate: true
+  - log_db_config:
+  - router:
+      web_app_backend:
+        host: kbi_api
+        port: 8000
+  - web:
+      admin:
+        auth_strategies:
+          enabled:
+            - local
+
+# Initial superuser
+web:
+  admin:
+    initial_superusers:
+      - "admin@kbilabs.com"
+
+# API configuration
+apis:
+  - id: digital-gap-analyzer
+    name: "Digital Gap Analyzer API"
+    backend_protocol: "http"
+    backend_host: "kbi_api"
+    backend_port: 8000
+    frontend_host: "*"
+    url_matches:
+      - frontend_prefix: "/api/v1/digital-gap/"
+        backend_prefix: "/api/v1/digital-gap/"
+    settings:
+      require_api_key: true
+      rate_limit_mode: "unlimited"
+      anonymous_rate_limit_behavior: "ip_fallback"
