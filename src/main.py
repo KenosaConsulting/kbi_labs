@@ -6,6 +6,7 @@ from fastapi import FastAPI, Query, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from .api.v1.api import api_router
+from .api.v1.endpoints.ml.predictions import router as ml_router
 from datetime import datetime
 from typing import Optional
 
@@ -28,8 +29,9 @@ app.add_middleware(
 # Mount static files
 app.mount('/static', StaticFiles(directory='static'), name='static')
 
-# Include API router
+# Include API routers
 app.include_router(api_router, prefix='/api/v1')
+app.include_router(ml_router, prefix='/api/v1')
 
 # Import patent search module
 from .patent_search_module import patent_engine
