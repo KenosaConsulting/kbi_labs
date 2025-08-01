@@ -1,0 +1,122 @@
+
+        ========================================
+        KBI LABS ENRICHMENT COMPLETE
+        ========================================
+        
+        Total Processing Time: 92.2 minutes (1.5 hours)
+        Companies Processed: 46,998
+        Duplicates Skipped: 17,801
+        
+        API Enrichment Coverage:
+        - Census: 46,998 (100.0%)  
+        - FRED: 46,998 (100.0%)
+        
+        Local Data Matching:
+        - NSF Awards: 0 (0.0%)
+        - Patents: 6,248 (13.3%)
+        
+        Errors: 0
+        
+        PE Investment Scores:
+        - Average: 85.3
+        - Highest: 100.0
+        - Lowest: 55.0
+        
+        Business Health Distribution:
+        - Grade A: 35,595 (55.3%)
+        - Grade B: 16,423 (25.5%)
+        - Grade C: 9,400 (14.6%)
+        - Grade D: 2,932 (4.6%)
+        - Grade F: 0 (0.0%)
+        
+        
+        Top 10 Investment Opportunities:
+        
+        1. SOUTH JERSEY HEAT AND COOL LIMITED LIABILITY COMPANY
+           Location: FORKED RIVER, New Jersey
+           PE Score: 100.0
+           Grade: A
+           NSF Awards: 0
+           Patents: 15
+        
+        2. CARDINAL REGENT CONSULTING LLC
+           Location: WEST RIVER, Maryland
+           PE Score: 100.0
+           Grade: A
+           NSF Awards: 0
+           Patents: 0
+        
+        3. CTI ENVIRONMENTAL INC
+           Location: LONG BEACH, California
+           PE Score: 100.0
+           Grade: A
+           NSF Awards: 0
+           Patents: 0
+        
+        4. MUNRO ENTERPRISES LLC
+           Location: OKEMOS, Michigan
+           PE Score: 100.0
+           Grade: A
+           NSF Awards: 0
+           Patents: 0
+        
+        5. OPTIMO INFORMATION TECHNOLOGY LLC
+           Location: BLOOMSBURG, Pennsylvania
+           PE Score: 100.0
+           Grade: A
+           NSF Awards: 0
+           Patents: 0
+        
+        6. DEVISED CONTRACTORS LLC
+           Location: SAN ANTONIO, Texas
+           PE Score: 100.0
+           Grade: A
+           NSF Awards: 0
+           Patents: 0
+        
+        7. FAMAASH LLC
+           Location: FRANKLIN PARK, New Jersey
+           PE Score: 100.0
+           Grade: A
+           NSF Awards: 0
+           Patents: 0
+        
+        8. BARRIOS AND ASSOCIATES, LLC
+           Location: ORANGE, California
+           PE Score: 100.0
+           Grade: A
+           NSF Awards: 0
+           Patents: 0
+        
+        9. LIGHTFOOT COMMUNICATIONS LLC
+           Location: TAMPA, Florida
+           PE Score: 100.0
+           Grade: A
+           NSF Awards: 0
+           Patents: 0
+        
+        10. I.T. ARCHITECT CORP, THE
+           Location: CHICAGO, Illinois
+           PE Score: 100.0
+           Grade: A
+           NSF Awards: 0
+           Patents: 0
+        
+
+Top Industries by Average PE Score:
+        NAICS 238350: 100.0 (1.0 companies)
+        NAICS 311830.0: 100.0 (1.0 companies)
+        NAICS 325510: 100.0 (1.0 companies)
+        NAICS 516110.0: 100.0 (2.0 companies)
+        NAICS 524210: 100.0 (1.0 companies)
+        NAICS 532120: 100.0 (1.0 companies)
+        NAICS 532420: 100.0 (1.0 companies)
+        NAICS 541110: 100.0 (2.0 companies)
+        NAICS 541219: 100.0 (1.0 companies)
+        NAICS 541320: 100.0 (1.0 companies)
+        
+        Data saved to: kbi_complete_enriched.db
+        Log saved to: kbi_enrichment_complete.log
+        
+        ========================================
+        

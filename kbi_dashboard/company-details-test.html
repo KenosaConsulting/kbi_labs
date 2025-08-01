@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Details - KBI Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold mb-4">Company Details</h1>
+        <div id="loading">Loading...</div>
+        <div id="company-info"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://3.143.232.123:5000/api';
+        
+        async function loadCompanyDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const uei = urlParams.get('uei');
+            
+            if (!uei) {
+                document.getElementById('loading').textContent = 'No company specified';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/companies/${uei}`);
+                const company = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('company-info').innerHTML = `
+                    <div class="bg-white p-6 rounded shadow">
+                        <h2 class="text-xl font-bold">${company.organization_name}</h2>
+                        <p>Location: ${company.city}, ${company.state}</p>
+                        <p>Score: ${company.pe_investment_score}</p>
+                        <p>Grade: ${company.business_health_grade}</p>
+                        <p>NAICS: ${company.primary_naics}</p>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('loading').textContent = 'Error loading company: ' + error.message;
+            }
+        }
+        
+        loadCompanyDetails();
+    </script>
+</body>
+</html>

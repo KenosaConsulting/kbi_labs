@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Analysis - KBI Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-indigo-600">KBI Labs - Portfolio Analysis</h1>
+                <a href="index.html" class="text-indigo-600 hover:text-indigo-800">← Back to Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Portfolio Summary -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Portfolio Companies</p>
+                <p id="totalCompanies" class="text-3xl font-bold text-indigo-600">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Total Contract Value</p>
+                <p id="totalValue" class="text-3xl font-bold text-green-600">$0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Average PE Score</p>
+                <p id="avgScore" class="text-3xl font-bold text-blue-600">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Portfolio Health</p>
+                <p id="portfolioHealth" class="text-3xl font-bold">-</p>
+            </div>
+        </div>
+
+        <!-- Top Companies Table -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h3 class="text-lg font-semibold mb-4">Top Portfolio Companies</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PE Score</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patents</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Value</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topCompaniesTable" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading companies...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" style="max-width: 1200px; margin: 0 auto;">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">Industry Distribution</h3>
+                <div style="height: 300px; position: relative;"><canvas id="industryChart"></canvas></div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">Geographic Distribution</h3>
+                <div style="height: 300px; position: relative;"><canvas id="geoChart"></canvas></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    // Load portfolio data
+    async function loadPortfolioData() {
+        try {
+            const response = await fetch('/api/companies');
+            const companies = await response.json();
+            
+            console.log(`Loaded ${companies.length} companies`);
+            
+            // Update summary stats
+            document.getElementById('totalCompanies').textContent = companies.length;
+            
+            const totalValue = companies.reduce((sum, c) => sum + (c.federal_contracts_value || 0), 0);
+            document.getElementById('totalValue').textContent = `$${(totalValue / 1000000).toFixed(1)}M`;
+            
+            const avgScore = companies.reduce((sum, c) => sum + (c.pe_investment_score || 0), 0) / companies.length;
+            document.getElementById('avgScore').textContent = avgScore.toFixed(1);
+            
+            const health = avgScore >= 80 ? 'Strong' : avgScore >= 70 ? 'Good' : 'Fair';
+            document.getElementById('portfolioHealth').textContent = health;
+            document.getElementById('portfolioHealth').className = `text-3xl font-bold ${
+                health === 'Strong' ? 'text-green-600' : health === 'Good' ? 'text-blue-600' : 'text-yellow-600'
+            }`;
+            
+            // Populate table
+            const tbody = document.getElementById('topCompaniesTable');
+            tbody.innerHTML = '';
+            
+            // Sort by PE score
+            companies.sort((a, b) => (b.pe_investment_score || 0) - (a.pe_investment_score || 0));
+            
+            // Add top 25 companies
+            companies.slice(0, 25).forEach(company => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${company.company_name || 'Unknown'}</div>
+                        <div class="text-sm text-gray-500">${company.uei || ''}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${company.city || ''}, ${company.state || ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            ${company.pe_investment_score || 0}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${company.business_health_grade || '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${company.patent_count || 0}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        $${((company.federal_contracts_value || 0) / 1000000).toFixed(2)}M
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="company-details.html?uei=${company.uei}" class="text-indigo-600 hover:text-indigo-900">
+                            View Details
+                        </a>
+                    </td>
+                `;
+            });
+            
+            // Create simple charts
+            createCharts(companies);
+            
+        } catch (error) {
+            console.error('Error loading portfolio:', error);
+            document.getElementById('topCompaniesTable').innerHTML = 
+                '<tr><td colspan="7" class="px-6 py-4 text-center text-red-600">Error loading companies</td></tr>';
+        }
+    }
+    
+    function createCharts(companies) {
+        // Industry chart
+        const industries = {};
+        companies.forEach(c => {
+            const industry = c.primary_naics ? c.primary_naics.toString().substring(0, 2) : 'Unknown';
+            industries[industry] = (industries[industry] || 0) + 1;
+        });
+        
+        const industryCtx = document.getElementById('industryChart').getContext('2d');
+        new Chart(industryCtx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(industries),
+                datasets: [{
+                    data: Object.values(industries),
+                    backgroundColor: [
+                        '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+                        '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Geographic chart
+        const states = {};
+        companies.forEach(c => {
+            const state = c.state || 'Unknown';
+            states[state] = (states[state] || 0) + 1;
+        });
+        
+        const topStates = Object.entries(states)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+        
+        const geoCtx = document.getElementById('geoChart').getContext('2d');
+        new Chart(geoCtx, {
+            type: 'bar',
+            data: {
+                labels: topStates.map(s => s[0]),
+                datasets: [{
+                    label: 'Companies',
+                    data: topStates.map(s => s[1]),
+                    backgroundColor: '#3B82F6'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    
+    // Load data on page load
+    document.addEventListener('DOMContentLoaded', loadPortfolioData);
+    </script>
+</body>
+</html>
+<script>
+// Add this right after the existing script tag
+console.log('Portfolio page loaded - checking data integrity');
+
+// Override the row creation to ensure all fields are properly displayed
+function createCompanyRow(company) {
+    // Ensure all fields have values
+    const displayName = company.company_name || company.organization_name || 'Company Name Not Available';
+    const uei = company.uei || 'No UEI';
+    const city = company.city || 'Unknown';
+    const state = company.state || 'Unknown';
+    const score = company.pe_investment_score || 0;
+    const grade = company.business_health_grade || 'N/A';
+    const patents = company.patent_count || 0;
+    const contracts = company.federal_contracts_value || 0;
+    
+    return `
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">${displayName}</div>
+            <div class="text-sm text-gray-500">${uei}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            ${city}, ${state}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                ${score}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            ${grade}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            ${patents}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            $${(contracts / 1000000).toFixed(2)}M
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <a href="company-details.html?uei=${uei}" class="text-indigo-600 hover:text-indigo-900">
+                View Details
+            </a>
+        </td>
+    `;
+}
+</script>

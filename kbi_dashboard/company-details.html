@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Details - KBI Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-indigo-600">KBI Labs</h1>
+                <a href="index.html" class="text-indigo-600 hover:text-indigo-800">← Back to Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div id="loading" class="text-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p class="mt-2">Loading company details...</p>
+        </div>
+
+        <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+
+        <div id="company-content" class="hidden">
+            <!-- Company Header -->
+            <div id="company-header" class="bg-white rounded-lg shadow p-6 mb-6"></div>
+
+            <!-- Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <p class="text-sm text-gray-600">PE Investment Score</p>
+                    <p id="peScore" class="text-2xl font-bold">-</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <p class="text-sm text-gray-600">Business Health Grade</p>
+                    <p id="healthGrade" class="text-2xl font-bold">-</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <p class="text-sm text-gray-600">Federal Contracts</p>
+                    <p id="fedContracts" class="text-2xl font-bold">-</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <p class="text-sm text-gray-600">Location</p>
+                    <p id="location" class="text-2xl font-bold">-</p>
+                </div>
+            </div>
+
+            <!-- AI Insights Alert -->
+            <div id="aiAlert" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg shadow-lg p-4 mb-6">
+                <div class="flex items-center">
+                    <svg class="animate-spin h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>AI Analysis Loading... (this may take up to 30 seconds)</span>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="border-b border-gray-200">
+                    <nav class="flex">
+                        <button class="tab-btn px-6 py-4 font-medium text-indigo-600 border-b-2 border-indigo-600" data-tab="overview">Overview</button>
+                        <button class="tab-btn px-6 py-4 font-medium text-gray-500 hover:text-gray-700" data-tab="financial">Financial</button>
+                        <button class="tab-btn px-6 py-4 font-medium text-gray-500 hover:text-gray-700" data-tab="ai-insights">AI Insights</button>
+                    </nav>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="p-6">
+                    <!-- Overview Tab -->
+                    <div id="overview-tab" class="tab-content">
+                        <h3 class="text-lg font-semibold mb-4">Company Overview</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-medium mb-2">Basic Information</h4>
+                                <dl class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">UEI:</dt>
+                                        <dd id="uei">-</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">NAICS Code:</dt>
+                                        <dd id="naics">-</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">SAM Status:</dt>
+                                        <dd id="samStatus">-</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">Contact Information</h4>
+                                <dl class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">Phone:</dt>
+                                        <dd id="phone">-</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">Email:</dt>
+                                        <dd id="email">-</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">Website:</dt>
+                                        <dd id="website">-</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Tab -->
+                    <div id="financial-tab" class="tab-content hidden">
+                        <h3 class="text-lg font-semibold mb-4">Financial Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 rounded p-4">
+                                <h4 class="font-medium mb-2">Federal Contracts</h4>
+                                <p class="text-2xl font-bold" id="contractValue">-</p>
+                                <p class="text-sm text-gray-600" id="contractCount">-</p>
+                            </div>
+                            <div class="bg-gray-50 rounded p-4">
+                                <h4 class="font-medium mb-2">Innovation Metrics</h4>
+                                <p class="text-2xl font-bold" id="patents">-</p>
+                                <p class="text-sm text-gray-600" id="nsfFunding">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Insights Tab -->
+                    <div id="ai-insights-tab" class="tab-content hidden">
+                        <div id="aiInsightsContent" class="text-center py-8">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                            <p class="mt-2">Generating AI insights...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = 'http://3.143.232.123:5000/api';
+        const AI_API_BASE = 'http://3.143.232.123:8090/api';
+        let currentCompany = null;
+        let aiInsights = null;
+
+        // Tab functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-btn')) {
+                const tab = e.target.dataset.tab;
+                
+                // Update buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('text-indigo-600', 'border-indigo-600');
+                    btn.classList.add('text-gray-500');
+                });
+                e.target.classList.remove('text-gray-500');
+                e.target.classList.add('text-indigo-600', 'border-indigo-600');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById(`${tab}-tab`).classList.remove('hidden');
+                
+                // Load AI insights when tab is clicked
+                if (tab === 'ai-insights' && currentCompany && !aiInsights) {
+                    loadAIInsights();
+                }
+            }
+        });
+
+        async function loadCompanyDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const uei = urlParams.get('uei');
+            
+            if (!uei) {
+                showError('No company specified');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/companies/${uei}`);
+                if (!response.ok) throw new Error('Company not found');
+                
+                const company = await response.json();
+                currentCompany = company;
+                displayCompany(company);
+                
+                // Start loading AI insights in background
+                loadAIInsights();
+                
+            } catch (error) {
+                showError('Failed to load company: ' + error.message);
+            }
+        }
+
+        function displayCompany(company) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('company-content').classList.remove('hidden');
+            
+            // Header
+            document.getElementById('company-header').innerHTML = `
+                <h2 class="text-2xl font-bold">${company.organization_name || 'Unknown'}</h2>
+                <p class="text-gray-600">${company.city || 'N/A'}, ${company.state || 'N/A'}</p>
+            `;
+            
+            // Metrics
+            document.getElementById('peScore').textContent = company.pe_investment_score || '-';
+            document.getElementById('healthGrade').textContent = company.business_health_grade || '-';
+            document.getElementById('fedContracts').textContent = company.federal_contracts_count || '0';
+            document.getElementById('location').textContent = company.state || '-';
+            
+            // Overview
+            document.getElementById('uei').textContent = company.uei || '-';
+            document.getElementById('naics').textContent = company.primary_naics || '-';
+            document.getElementById('samStatus').textContent = company.sam_registration_status || '-';
+            document.getElementById('phone').textContent = company.phone_number || '-';
+            document.getElementById('email').textContent = company.email || '-';
+            document.getElementById('website').textContent = company.website || '-';
+            
+            // Financial
+            document.getElementById('contractValue').textContent = 
+                company.federal_contracts_value ? `$${(company.federal_contracts_value/1000000).toFixed(2)}M` : '$0';
+            document.getElementById('contractCount').textContent = 
+                `${company.federal_contracts_count || 0} contracts`;
+            document.getElementById('patents').textContent = 
+                `${company.patent_count || 0} patents`;
+            document.getElementById('nsfFunding').textContent = 
+                company.nsf_total_funding ? `$${(company.nsf_total_funding/1000).toFixed(0)}K NSF funding` : 'No NSF funding';
+        }
+
+        async function loadAIInsights() {
+            if (!currentCompany) return;
+            
+            try {
+                const params = new URLSearchParams({
+                    name: currentCompany.organization_name,
+                    score: currentCompany.pe_investment_score || 0,
+                    grade: currentCompany.business_health_grade || 'N/A',
+                    contracts: currentCompany.federal_contracts_count || 0,
+                    value: currentCompany.federal_contracts_value || 0,
+                    city: currentCompany.city || 'N/A',
+                    state: currentCompany.state || 'N/A',
+                    naics: currentCompany.primary_naics || 'N/A',
+                    patents: currentCompany.patent_count || 0,
+                    nsf: currentCompany.nsf_total_funding || 0
+                });
+                
+                const response = await fetch(`${AI_API_BASE}/insights/${currentCompany.uei}?${params}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    aiInsights = result.data;
+                    displayEnhancedAIInsights(result.data);
+                    document.getElementById('aiAlert').innerHTML = `
+                        <div class="flex items-center">
+                            <svg class="h-5 w-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span>AI Analysis Complete</span>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Failed to generate insights');
+                }
+            } catch (error) {
+                console.error('AI Insights error:', error);
+                displayError();
+            }
+        }
+
+        function displayEnhancedAIInsights(insights) {
+            const colors = {
+                'Strong Buy': 'bg-green-100 text-green-800 border-green-300',
+                'Buy': 'bg-blue-100 text-blue-800 border-blue-300',
+                'Hold': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                'Sell': 'bg-red-100 text-red-800 border-red-300'
+            };
+            
+            const investmentScore = insights.investment_score || 0;
+            const innovationScore = insights.innovation_score || 0;
+            
+            document.getElementById('aiInsightsContent').innerHTML = `
+    <div class="space-y-6">
+        <div class="flex justify-between items-center">
+            <h3 class="text-2xl font-bold">AI Investment Analysis</h3>
+            <span class="px-6 py-3 rounded-lg font-bold text-lg border-2 ${colors[insights.recommendation || insights['Investment Recommendation']] || 'bg-gray-100'}">
+                ${insights.recommendation || insights['Investment Recommendation'] || 'Hold'}
+            </span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-md border border-green-200 p-4">
+                <h4 class="font-semibold text-green-800 mb-2">Key Strengths</h4>
+                <ul class="space-y-1">
+                    ${(insights.key_strengths || insights['Key Strengths'] || []).map(s => `<li class="text-sm">▸ ${s}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-blue-200 p-4">
+                <h4 class="font-semibold text-blue-800 mb-2">Growth Opportunities</h4>
+                <ul class="space-y-1">
+                    ${(insights.growth_opportunities || insights['Growth Opportunities'] || []).map(o => `<li class="text-sm">▸ ${o}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-red-200 p-4">
+                <h4 class="font-semibold text-red-800 mb-2">Risk Factors</h4>
+                <ul class="space-y-1">
+                    ${(insights.risk_factors || insights['Risk Factors'] || []).map(r => `<li class="text-sm">▸ ${r}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-purple-200 p-4">
+                <h4 class="font-semibold text-purple-800 mb-2">Analytics</h4>
+                ${insights.analytics ? `
+                    <p class="text-sm">Market Share: ${insights.analytics.market_share_estimate?.toFixed(1)}%</p>
+                    <p class="text-sm">Growth Potential: ${insights.analytics.growth_potential?.toFixed(1)}%</p>
+                    <p class="text-sm">Efficiency: ${insights.analytics.efficiency_ratio?.toFixed(1)}%</p>
+                ` : ''}
+            </div>
+        </div>
+        ${insights.financial_projections ? `
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h4 class="font-semibold mb-2">Financial Projections</h4>
+                <p class="text-sm">Estimated IRR: ${insights.financial_projections.irr_estimate?.toFixed(1)}%</p>
+            </div>
+        ` : ''}
+    </div>
+`;
+        }
+
+        function displayError() {
+            document.getElementById('aiInsightsContent').innerHTML = `
+    <div class="space-y-6">
+        <div class="flex justify-between items-center">
+            <h3 class="text-2xl font-bold">AI Investment Analysis</h3>
+            <span class="px-6 py-3 rounded-lg font-bold text-lg border-2 ${colors[insights.recommendation || insights['Investment Recommendation']] || 'bg-gray-100'}">
+                ${insights.recommendation || insights['Investment Recommendation'] || 'Hold'}
+            </span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-md border border-green-200 p-4">
+                <h4 class="font-semibold text-green-800 mb-2">Key Strengths</h4>
+                <ul class="space-y-1">
+                    ${(insights.key_strengths || insights['Key Strengths'] || []).map(s => `<li class="text-sm">▸ ${s}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-blue-200 p-4">
+                <h4 class="font-semibold text-blue-800 mb-2">Growth Opportunities</h4>
+                <ul class="space-y-1">
+                    ${(insights.growth_opportunities || insights['Growth Opportunities'] || []).map(o => `<li class="text-sm">▸ ${o}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-red-200 p-4">
+                <h4 class="font-semibold text-red-800 mb-2">Risk Factors</h4>
+                <ul class="space-y-1">
+                    ${(insights.risk_factors || insights['Risk Factors'] || []).map(r => `<li class="text-sm">▸ ${r}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-purple-200 p-4">
+                <h4 class="font-semibold text-purple-800 mb-2">Analytics</h4>
+                ${insights.analytics ? `
+                    <p class="text-sm">Market Share: ${insights.analytics.market_share_estimate?.toFixed(1)}%</p>
+                    <p class="text-sm">Growth Potential: ${insights.analytics.growth_potential?.toFixed(1)}%</p>
+                    <p class="text-sm">Efficiency: ${insights.analytics.efficiency_ratio?.toFixed(1)}%</p>
+                ` : ''}
+            </div>
+        </div>
+        ${insights.financial_projections ? `
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h4 class="font-semibold mb-2">Financial Projections</h4>
+                <p class="text-sm">Estimated IRR: ${insights.financial_projections.irr_estimate?.toFixed(1)}%</p>
+            </div>
+        ` : ''}
+    </div>
+`;
+        }
+
+        function showError(message) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+
+        // Initialize
+        loadCompanyDetails();
+    </script>
+</body>
+</html>
+    <script>
+        const API_BASE = '/api';
+        const AI_API_BASE = '/api';
+        let currentCompany = null;
+        let aiInsights = null;
+        let charts = {};
+
+        // Tab functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-btn')) {
+                const tab = e.target.dataset.tab;
+                
+                // Update buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('text-indigo-600', 'border-indigo-600');
+                    btn.classList.add('text-gray-500');
+                });
+                e.target.classList.remove('text-gray-500');
+                e.target.classList.add('text-indigo-600', 'border-indigo-600');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById(`${tab}-tab`).classList.remove('hidden');
+                
+                // Load content for specific tabs
+                if (tab === 'ai-insights' && currentCompany && !aiInsights) {
+                    loadAIInsights();
+                } else if (tab === 'visualizations' && currentCompany) {
+                    setTimeout(() => createVisualizations(), 100);
+                }
+            }
+        });
+
+        async function loadCompanyDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const uei = urlParams.get('uei');
+            
+            if (!uei) {
+                showError('No company specified');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/companies/${uei}`);
+                if (!response.ok) throw new Error('Company not found');
+                
+                const company = await response.json();
+                currentCompany = company;
+                displayCompany(company);
+                
+                // Start loading AI insights in background
+                loadAIInsights();
+                
+            } catch (error) {
+                showError('Failed to load company: ' + error.message);
+            }
+        }
+
+        function displayCompany(company) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('company-content').classList.remove('hidden');
+            
+            // Update all the display elements
+            document.getElementById('company-header').innerHTML = `
+                <h2 class="text-2xl font-bold">${company.organization_name || 'Unknown'}</h2>
+                <p class="text-gray-600">${company.city || 'N/A'}, ${company.state || 'N/A'}</p>
+            `;
+            
+            document.getElementById('peScore').textContent = company.pe_investment_score || '-';
+            document.getElementById('healthGrade').textContent = company.business_health_grade || '-';
+            document.getElementById('fedContracts').textContent = company.federal_contracts_count || '0';
+            document.getElementById('location').textContent = company.state || '-';
+            document.getElementById('uei').textContent = company.uei || '-';
+            document.getElementById('naics').textContent = company.primary_naics || '-';
+            document.getElementById('samStatus').textContent = company.sam_registration_status || '-';
+            document.getElementById('phone').textContent = company.phone_number || '-';
+            document.getElementById('email').textContent = company.email || '-';
+            document.getElementById('website').textContent = company.website || '-';
+            document.getElementById('contractValue').textContent = 
+                company.federal_contracts_value ? `$${(company.federal_contracts_value/1000000).toFixed(2)}M` : '$0';
+            document.getElementById('contractCount').textContent = 
+                `${company.federal_contracts_count || 0} contracts`;
+            document.getElementById('patents').textContent = 
+                `${company.patent_count || 0} patents`;
+            document.getElementById('nsfFunding').textContent = 
+                company.nsf_total_funding ? `$${(company.nsf_total_funding/1000).toFixed(0)}K NSF funding` : 'No NSF funding';
+        }
+
+        function createVisualizations() {
+            if (!currentCompany) return;
+            
+            // Create Radar Chart
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            if (charts.radar) charts.radar.destroy();
+            
+            charts.radar = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['PE Score', 'Health Grade', 'Contracts', 'Innovation', 'Market Position'],
+                    datasets: [{
+                        label: currentCompany.organization_name,
+                        data: [
+                            currentCompany.pe_investment_score || 0,
+                            gradeToScore(currentCompany.business_health_grade),
+                            Math.min(100, (currentCompany.federal_contracts_count || 0) * 10),
+                            Math.min(100, (currentCompany.patent_count || 0) * 20),
+                            50
+                        ],
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadAIInsights() {
+            if (!currentCompany) return;
+            
+            try {
+                const params = new URLSearchParams({
+                    name: currentCompany.organization_name,
+                    score: currentCompany.pe_investment_score || 0,
+                    grade: currentCompany.business_health_grade || 'N/A',
+                    contracts: currentCompany.federal_contracts_count || 0,
+                    value: currentCompany.federal_contracts_value || 0,
+                    city: currentCompany.city || 'N/A',
+                    state: currentCompany.state || 'N/A',
+                    naics: currentCompany.primary_naics || 'N/A',
+                    patents: currentCompany.patent_count || 0,
+                    nsf: currentCompany.nsf_total_funding || 0
+                });
+                
+                const response = await fetch(`${AI_API_BASE}/insights/${currentCompany.uei}?${params}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    aiInsights = result.data;
+                    displayEnhancedAIInsights(result.data);
+                } else {
+                    throw new Error('Failed to generate insights');
+                }
+            } catch (error) {
+                console.error('AI Insights error:', error);
+                displayError();
+            }
+        }
+
+        function displayEnhancedAIInsights(insights) {
+            // Use the same display function from before
+            const colors = {
+                'Strong Buy': 'bg-green-100 text-green-800 border-green-300',
+                'Buy': 'bg-blue-100 text-blue-800 border-blue-300',
+                'Hold': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                'Sell': 'bg-red-100 text-red-800 border-red-300'
+            };
+            
+            document.getElementById('aiInsightsContent').innerHTML = `
+    <div class="space-y-6">
+        <div class="flex justify-between items-center">
+            <h3 class="text-2xl font-bold">AI Investment Analysis</h3>
+            <span class="px-6 py-3 rounded-lg font-bold text-lg border-2 ${colors[insights.recommendation || insights['Investment Recommendation']] || 'bg-gray-100'}">
+                ${insights.recommendation || insights['Investment Recommendation'] || 'Hold'}
+            </span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-md border border-green-200 p-4">
+                <h4 class="font-semibold text-green-800 mb-2">Key Strengths</h4>
+                <ul class="space-y-1">
+                    ${(insights.key_strengths || insights['Key Strengths'] || []).map(s => `<li class="text-sm">▸ ${s}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-blue-200 p-4">
+                <h4 class="font-semibold text-blue-800 mb-2">Growth Opportunities</h4>
+                <ul class="space-y-1">
+                    ${(insights.growth_opportunities || insights['Growth Opportunities'] || []).map(o => `<li class="text-sm">▸ ${o}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-red-200 p-4">
+                <h4 class="font-semibold text-red-800 mb-2">Risk Factors</h4>
+                <ul class="space-y-1">
+                    ${(insights.risk_factors || insights['Risk Factors'] || []).map(r => `<li class="text-sm">▸ ${r}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-purple-200 p-4">
+                <h4 class="font-semibold text-purple-800 mb-2">Analytics</h4>
+                ${insights.analytics ? `
+                    <p class="text-sm">Market Share: ${insights.analytics.market_share_estimate?.toFixed(1)}%</p>
+                    <p class="text-sm">Growth Potential: ${insights.analytics.growth_potential?.toFixed(1)}%</p>
+                    <p class="text-sm">Efficiency: ${insights.analytics.efficiency_ratio?.toFixed(1)}%</p>
+                ` : ''}
+            </div>
+        </div>
+        ${insights.financial_projections ? `
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h4 class="font-semibold mb-2">Financial Projections</h4>
+                <p class="text-sm">Estimated IRR: ${insights.financial_projections.irr_estimate?.toFixed(1)}%</p>
+            </div>
+        ` : ''}
+    </div>
+`;
+        }
+
+        function gradeToScore(grade) {
+            const gradeMap = { 'A': 100, 'B': 80, 'C': 60, 'D': 40, 'F': 20 };
+            return gradeMap[grade] || 0;
+        }
+
+        function displayError() {
+            document.getElementById('aiInsightsContent').innerHTML = `
+    <div class="space-y-6">
+        <div class="flex justify-between items-center">
+            <h3 class="text-2xl font-bold">AI Investment Analysis</h3>
+            <span class="px-6 py-3 rounded-lg font-bold text-lg border-2 ${colors[insights.recommendation || insights['Investment Recommendation']] || 'bg-gray-100'}">
+                ${insights.recommendation || insights['Investment Recommendation'] || 'Hold'}
+            </span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-md border border-green-200 p-4">
+                <h4 class="font-semibold text-green-800 mb-2">Key Strengths</h4>
+                <ul class="space-y-1">
+                    ${(insights.key_strengths || insights['Key Strengths'] || []).map(s => `<li class="text-sm">▸ ${s}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-blue-200 p-4">
+                <h4 class="font-semibold text-blue-800 mb-2">Growth Opportunities</h4>
+                <ul class="space-y-1">
+                    ${(insights.growth_opportunities || insights['Growth Opportunities'] || []).map(o => `<li class="text-sm">▸ ${o}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-red-200 p-4">
+                <h4 class="font-semibold text-red-800 mb-2">Risk Factors</h4>
+                <ul class="space-y-1">
+                    ${(insights.risk_factors || insights['Risk Factors'] || []).map(r => `<li class="text-sm">▸ ${r}</li>`).join('')}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md border border-purple-200 p-4">
+                <h4 class="font-semibold text-purple-800 mb-2">Analytics</h4>
+                ${insights.analytics ? `
+                    <p class="text-sm">Market Share: ${insights.analytics.market_share_estimate?.toFixed(1)}%</p>
+                    <p class="text-sm">Growth Potential: ${insights.analytics.growth_potential?.toFixed(1)}%</p>
+                    <p class="text-sm">Efficiency: ${insights.analytics.efficiency_ratio?.toFixed(1)}%</p>
+                ` : ''}
+            </div>
+        </div>
+        ${insights.financial_projections ? `
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h4 class="font-semibold mb-2">Financial Projections</h4>
+                <p class="text-sm">Estimated IRR: ${insights.financial_projections.irr_estimate?.toFixed(1)}%</p>
+            </div>
+        ` : ''}
+    </div>
+`;
+        }
+
+        function showError(message) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+
+        // Initialize
+        loadCompanyDetails();
+    </script>
+<script>
+// Override the company loading to handle UEI properly
+window.loadCompanyFixed = async function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let uei = urlParams.get('uei');
+    
+    if (!uei) {
+        document.getElementById('loading').innerHTML = 'No company specified';
+        return;
+    }
+    
+    try {
+        // Get all companies and find the one we need
+        const response = await fetch('/api/companies');
+        const companies = await response.json();
+        
+        // Find company by UEI (handle with or without dashes)
+        const company = companies.find(c => 
+            c.uei === uei || 
+            c.uei === uei.replace(/-/g, '') ||
+            c.uei.replace(/-/g, '') === uei.replace(/-/g, '')
+        );
+        
+        if (company) {
+            // Display the company
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('companyDetails').style.display = 'block';
+            
+            document.getElementById('companyName').textContent = company.company_name || 'Unknown Company';
+            document.getElementById('companyLocation').textContent = `${company.city || 'Unknown'}, ${company.state || 'Unknown'}`;
+            
+            // Update all the metrics
+            document.getElementById('peScore').textContent = company.pe_investment_score || 0;
+            document.getElementById('healthGrade').textContent = company.business_health_grade || 'N/A';
+            document.getElementById('contractValue').textContent = company.federal_contracts_value || 0;
+            document.getElementById('patentCount').textContent = company.patent_count || 0;
+            
+            // Try to load AI insights with timeout
+            setTimeout(() => {
+                const aiContent = document.getElementById('aiInsightsContent');
+                if (aiContent && aiContent.innerHTML.includes('Loading')) {
+                    aiContent.innerHTML = '<div class="text-yellow-600">AI analysis is currently unavailable. The service may be experiencing high load.</div>';
+                }
+            }, 15000);
+            
+            // Store for other functions
+            window.currentCompany = company;
+        } else {
+            document.getElementById('loading').innerHTML = 'Company not found';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('loading').innerHTML = 'Error loading company data';
+    }
+};
+
+// Call our fixed function on load
+document.addEventListener('DOMContentLoaded', window.loadCompanyFixed);
+</script>

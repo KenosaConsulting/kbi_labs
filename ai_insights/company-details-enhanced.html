@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Details - KBI Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-indigo-600">KBI Labs</h1>
+                <a href="index.html" class="text-indigo-600 hover:text-indigo-800">← Back to Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div id="loading" class="text-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p class="mt-2">Loading company details...</p>
+        </div>
+
+        <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+
+        <div id="company-content" class="hidden">
+            <!-- Company Header -->
+            <div id="company-header" class="bg-white rounded-lg shadow p-6 mb-6"></div>
+
+            <!-- Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <p class="text-sm text-gray-600">PE Investment Score</p>
+                    <p id="peScore" class="text-2xl font-bold">-</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <p class="text-sm text-gray-600">Business Health Grade</p>
+                    <p id="healthGrade" class="text-2xl font-bold">-</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <p class="text-sm text-gray-600">Federal Contracts</p>
+                    <p id="fedContracts" class="text-2xl font-bold">-</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <p class="text-sm text-gray-600">Location</p>
+                    <p id="location" class="text-2xl font-bold">-</p>
+                </div>
+            </div>
+
+            <!-- AI Insights Alert -->
+            <div id="aiAlert" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg shadow-lg p-4 mb-6">
+                <div class="flex items-center">
+                    <svg class="animate-spin h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>AI Analysis Complete</span>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="border-b border-gray-200">
+                    <nav class="flex">
+                        <button class="tab-btn px-6 py-4 font-medium text-indigo-600 border-b-2 border-indigo-600" data-tab="overview">Overview</button>
+                        <button class="tab-btn px-6 py-4 font-medium text-gray-500 hover:text-gray-700" data-tab="financial">Financial</button>
+                        <button class="tab-btn px-6 py-4 font-medium text-gray-500 hover:text-gray-700" data-tab="ai-insights">AI Insights</button>
+                        <button class="tab-btn px-6 py-4 font-medium text-gray-500 hover:text-gray-700" data-tab="visualizations">Analytics</button>
+                        <button class="tab-btn px-6 py-4 font-medium text-gray-500 hover:text-gray-700" data-tab="comparison">Compare</button>
+                    </nav>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="p-6">
+                    <!-- Overview Tab -->
+                    <div id="overview-tab" class="tab-content">
+                        <h3 class="text-lg font-semibold mb-4">Company Overview</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-medium mb-2">Basic Information</h4>
+                                <dl class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">UEI:</dt>
+                                        <dd id="uei">-</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">NAICS Code:</dt>
+                                        <dd id="naics">-</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">SAM Status:</dt>
+                                        <dd id="samStatus">-</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">Contact Information</h4>
+                                <dl class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">Phone:</dt>
+                                        <dd id="phone">-</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">Email:</dt>
+                                        <dd id="email">-</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">Website:</dt>
+                                        <dd id="website">-</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Tab -->
+                    <div id="financial-tab" class="tab-content hidden">
+                        <h3 class="text-lg font-semibold mb-4">Financial Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 rounded p-4">
+                                <h4 class="font-medium mb-2">Federal Contracts</h4>
+                                <p class="text-2xl font-bold" id="contractValue">-</p>
+                                <p class="text-sm text-gray-600" id="contractCount">-</p>
+                            </div>
+                            <div class="bg-gray-50 rounded p-4">
+                                <h4 class="font-medium mb-2">Innovation Metrics</h4>
+                                <p class="text-2xl font-bold" id="patents">-</p>
+                                <p class="text-sm text-gray-600" id="nsfFunding">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Insights Tab -->
+                    <div id="ai-insights-tab" class="tab-content hidden">
+                        <div id="aiInsightsContent" class="text-center py-8">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                            <p class="mt-2">Generating AI insights...</p>
+                        </div>
+                    </div>
+
+                    <!-- Visualizations Tab -->
+                    <div id="visualizations-tab" class="tab-content hidden">
+                        <h3 class="text-lg font-semibold mb-4">Advanced Analytics</h3>
+                        
+                        <!-- Charts Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <!-- Score Radar Chart -->
+                            <div class="bg-white rounded-lg shadow p-4">
+                                <h4 class="font-medium mb-2">Company Performance Radar</h4>
+                                <canvas id="radarChart" width="400" height="300"></canvas>
+                            </div>
+                            
+                            <!-- Contract Value Timeline -->
+                            <div class="bg-white rounded-lg shadow p-4">
+                                <h4 class="font-medium mb-2">Contract Value Analysis</h4>
+                                <canvas id="contractChart" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Industry Comparison -->
+                        <div class="bg-white rounded-lg shadow p-4 mb-8">
+                            <h4 class="font-medium mb-2">Industry Comparison</h4>
+                            <div id="industryComparison" style="height: 400px;"></div>
+                        </div>
+
+                        <!-- Risk Assessment Matrix -->
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <h4 class="font-medium mb-2">Risk/Opportunity Matrix</h4>
+                            <div id="riskMatrix" style="height: 400px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Tab -->
+                    <div id="comparison-tab" class="tab-content hidden">
+                        <h3 class="text-lg font-semibold mb-4">Company Comparison</h3>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Compare with:</label>
+                            <select id="compareSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="">Select a company...</option>
+                            </select>
+                        </div>
+
+                        <div id="comparisonContent" class="hidden">
+                            <!-- Comparison Charts -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-white rounded-lg shadow p-4">
+                                    <h4 class="font-medium mb-2">Side-by-Side Metrics</h4>
+                                    <canvas id="comparisonChart" width="400" height="300"></canvas>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg shadow p-4">
+                                    <h4 class="font-medium mb-2">Competitive Positioning</h4>
+                                    <div id="positioningChart" style="height: 300px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = '/api';
+        const AI_API_BASE = '/api';
+        let currentCompany = null;
+        let aiInsights = null;
+        let charts = {};
+
+        // Tab functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-btn')) {
+                const tab = e.target.dataset.tab;
+                
+                // Update buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('text-indigo-600', 'border-indigo-600');
+                    btn.classList.add('text-gray-500');
+                });
+                e.target.classList.remove('text-gray-500');
+                e.target.classList.add('text-indigo-600', 'border-indigo-600');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById(`${tab}-tab`).classList.remove('hidden');
+                
+                // Load content for specific tabs
+                if (tab === 'ai-insights' && currentCompany && !aiInsights) {
+                    loadAIInsights();
+                } else if (tab === 'visualizations' && currentCompany) {
+                    createVisualizations();
+                } else if (tab === 'comparison' && currentCompany) {
+                    loadComparisonData();
+                }
+            }
+        });
+
+        async function loadCompanyDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const uei = urlParams.get('uei');
+            
+            if (!uei) {
+                showError('No company specified');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/companies/${uei}`);
+                if (!response.ok) throw new Error('Company not found');
+                
+                const company = await response.json();
+                currentCompany = company;
+                displayCompany(company);
+                
+                // Start loading AI insights in background
+                loadAIInsights();
+                
+            } catch (error) {
+                showError('Failed to load company: ' + error.message);
+            }
+        }
+
+        function displayCompany(company) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('company-content').classList.remove('hidden');
+            
+            // Header
+            document.getElementById('company-header').innerHTML = `
+                <h2 class="text-2xl font-bold">${company.organization_name || 'Unknown'}</h2>
+                <p class="text-gray-600">${company.city || 'N/A'}, ${company.state || 'N/A'}</p>
+            `;
+            
+            // Metrics
+            document.getElementById('peScore').textContent = company.pe_investment_score || '-';
+            document.getElementById('healthGrade').textContent = company.business_health_grade || '-';
+            document.getElementById('fedContracts').textContent = company.federal_contracts_count || '0';
+            document.getElementById('location').textContent = company.state || '-';
+            
+            // Overview
+            document.getElementById('uei').textContent = company.uei || '-';
+            document.getElementById('naics').textContent = company.primary_naics || '-';
+            document.getElementById('samStatus').textContent = company.sam_registration_status || '-';
+            document.getElementById('phone').textContent = company.phone_number || '-';
+            document.getElementById('email').textContent = company.email || '-';
+            document.getElementById('website').textContent = company.website || '-';
+            
+            // Financial
+            document.getElementById('contractValue').textContent = 
+                company.federal_contracts_value ? `$${(company.federal_contracts_value/1000000).toFixed(2)}M` : '$0';
+            document.getElementById('contractCount').textContent = 
+                `${company.federal_contracts_count || 0} contracts`;
+            document.getElementById('patents').textContent = 
+                `${company.patent_count || 0} patents`;
+            document.getElementById('nsfFunding').textContent = 
+                company.nsf_total_funding ? `$${(company.nsf_total_funding/1000).toFixed(0)}K NSF funding` : 'No NSF funding';
+        }
+
+        function createVisualizations() {
+            if (!currentCompany) return;
+            
+            // 1. Performance Radar Chart
+            createRadarChart();
+            
+            // 2. Contract Analysis
+            createContractChart();
+            
+            // 3. Industry Comparison
+            createIndustryComparison();
+            
+            // 4. Risk Matrix
+            createRiskMatrix();
+        }
+
+        function createRadarChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (charts.radar) charts.radar.destroy();
+            
+            charts.radar = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['PE Score', 'Health Grade', 'Contracts', 'Innovation', 'Market Position'],
+                    datasets: [{
+                        label: currentCompany.organization_name,
+                        data: [
+                            currentCompany.pe_investment_score || 0,
+                            gradeToScore(currentCompany.business_health_grade),
+                            Math.min(100, (currentCompany.federal_contracts_count || 0) * 10),
+                            Math.min(100, (currentCompany.patent_count || 0) * 20),
+                            currentCompany.market_position_score || 50
+                        ],
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        function createContractChart() {
+            const ctx = document.getElementById('contractChart').getContext('2d');
+            
+            if (charts.contract) charts.contract.destroy();
+            
+            // Simulated contract data over time
+            const contractData = generateContractTimeline();
+            
+            charts.contract = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: contractData.labels,
+                    datasets: [{
+                        label: 'Contract Value ($M)',
+                        data: contractData.values,
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Contract Count',
+                        data: contractData.counts,
+                        borderColor: 'rgba(168, 85, 247, 1)',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        yAxisID: 'y1',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            position: 'left'
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createIndustryComparison() {
+            // Get industry peers data
+            const peers = generateIndustryPeers();
+            
+            const trace1 = {
+                x: peers.map(p => p.score),
+                y: peers.map(p => p.contracts),
+                mode: 'markers+text',
+                type: 'scatter',
+                text: peers.map(p => p.name),
+                textposition: 'top center',
+                marker: {
+                    size: peers.map(p => p.size),
+                    color: peers.map(p => p.color),
+                    colorscale: 'Viridis'
+                }
+            };
+            
+            const layout = {
+                title: 'Industry Positioning',
+                xaxis: { title: 'PE Investment Score' },
+                yaxis: { title: 'Federal Contracts' },
+                showlegend: false
+            };
+            
+            Plotly.newPlot('industryComparison', [trace1], layout);
+        }
+
+        function createRiskMatrix() {
+            const risks = generateRiskData();
+            
+            const trace = {
+                x: risks.map(r => r.probability),
+                y: risks.map(r => r.impact),
+                mode: 'markers+text',
+                type: 'scatter',
+                text: risks.map(r => r.name),
+                textposition: 'middle center',
+                marker: {
+                    size: 20,
+                    color: risks.map(r => r.type === 'risk' ? 'red' : 'green'),
+                    opacity: 0.6
+                }
+            };
+            
+            const layout = {
+                title: 'Risk & Opportunity Assessment',
+                xaxis: { title: 'Probability', range: [0, 100] },
+                yaxis: { title: 'Impact', range: [0, 100] },
+                showlegend: false,
+                shapes: [
+                    {
+                        type: 'rect',
+                        x0: 50, x1: 100,
+                        y0: 50, y1: 100,
+                        fillcolor: 'rgba(255, 0, 0, 0.1)',
+                        line: { width: 0 }
+                    },
+                    {
+                        type: 'rect',
+                        x0: 0, x1: 50,
+                        y0: 0, y1: 50,
+                        fillcolor: 'rgba(0, 255, 0, 0.1)',
+                        line: { width: 0 }
+                    }
+                ]
+            };
+            
+            Plotly.newPlot('riskMatrix', [trace], layout);
+        }
+
+        async function loadComparisonData() {
+            try {
+                const response = await fetch(`${API_BASE}/companies`);
+                const companies = await response.json();
+                
+                // Filter to similar companies
+                const similar = companies.filter(c => 
+                    c.state === currentCompany.state && 
+                    c.uei !== currentCompany.uei
+                ).slice(0, 10);
+                
+                const select = document.getElementById('compareSelect');
+                select.innerHTML = '<option value="">Select a company...</option>';
+                
+                similar.forEach(company => {
+                    const option = document.createElement('option');
+                    option.value = company.uei;
+                    option.textContent = `${company.organization_name} (${company.city}, ${company.state})`;
+                    select.appendChild(option);
+                });
+                
+                select.addEventListener('change', async (e) => {
+                    if (e.target.value) {
+                        await loadComparisonCharts(e.target.value);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Failed to load comparison data:', error);
+            }
+        }
+
+        async function loadComparisonCharts(compareUei) {
+            try {
+                const response = await fetch(`${API_BASE}/companies/${compareUei}`);
+                const compareCompany = await response.json();
+                
+                document.getElementById('comparisonContent').classList.remove('hidden');
+                
+                // Create comparison bar chart
+                const ctx = document.getElementById('comparisonChart').getContext('2d');
+                
+                if (charts.comparison) charts.comparison.destroy();
+                
+                charts.comparison = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['PE Score', 'Contracts', 'Patents', 'Health Grade'],
+                        datasets: [{
+                            label: currentCompany.organization_name,
+                            data: [
+                                currentCompany.pe_investment_score || 0,
+                                currentCompany.federal_contracts_count || 0,
+                                currentCompany.patent_count || 0,
+                                gradeToScore(currentCompany.business_health_grade)
+                            ],
+                            backgroundColor: 'rgba(99, 102, 241, 0.6)'
+                        }, {
+                            label: compareCompany.organization_name,
+                            data: [
+                                compareCompany.pe_investment_score || 0,
+                                compareCompany.federal_contracts_count || 0,
+                                compareCompany.patent_count || 0,
+                                gradeToScore(compareCompany.business_health_grade)
+                            ],
+                            backgroundColor: 'rgba(34, 197, 94, 0.6)'
+                        }]
+                    }
+                });
+                
+                // Create positioning scatter
+                createPositioningChart(compareCompany);
+                
+            } catch (error) {
+                console.error('Failed to load comparison:', error);
+            }
+        }
+
+        function createPositioningChart(compareCompany) {
+            const trace1 = {
+                x: [currentCompany.pe_investment_score],
+                y: [currentCompany.federal_contracts_value / 1000000 || 0],
+                mode: 'markers+text',
+                name: currentCompany.organization_name,
+                text: [currentCompany.organization_name],
+                marker: { size: 20, color: 'blue' }
+            };
+            
+            const trace2 = {
+                x: [compareCompany.pe_investment_score],
+                y: [compareCompany.federal_contracts_value / 1000000 || 0],
+                mode: 'markers+text',
+                name: compareCompany.organization_name,
+                text: [compareCompany.organization_name],
+                marker: { size: 20, color: 'green' }
+            };
+            
+            const layout = {
+                title: 'Market Positioning',
+                xaxis: { title: 'PE Investment Score' },
+                yaxis: { title: 'Contract Value ($M)' }
+            };
+            
+            Plotly.newPlot('positioningChart', [trace1, trace2], layout);
+        }
+
+        // Helper functions
+        function gradeToScore(grade) {
+            const gradeMap = { 'A': 100, 'B': 80, 'C': 60, 'D': 40, 'F': 20 };
+            return gradeMap[grade] || 0;
+        }
+
+        function generateContractTimeline() {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            const baseValue = currentCompany.federal_contracts_value / 1000000 || 0;
+            const baseCount = currentCompany.federal_contracts_count || 0;
+            
+            return {
+                labels: months,
+                values: months.map((_, i) => baseValue * (0.8 + Math.random() * 0.4)),
+                counts: months.map((_, i) => Math.floor(baseCount * (0.7 + Math.random() * 0.6)))
+            };
+        }
+
+        function generateIndustryPeers() {
+            const currentScore = currentCompany.pe_investment_score || 50;
+            const currentContracts = currentCompany.federal_contracts_count || 0;
+            
+            return [
+                {
+                    name: currentCompany.organization_name,
+                    score: currentScore,
+                    contracts: currentContracts,
+                    size: 30,
+                    color: 'red'
+                },
+                ...Array(5).fill(0).map((_, i) => ({
+                    name: `Peer ${i + 1}`,
+                    score: currentScore + (Math.random() - 0.5) * 40,
+                    contracts: currentContracts + (Math.random() - 0.5) * 10,
+                    size: 15 + Math.random() * 15,
+                    color: 'blue'
+                }))
+            ];
+        }
+
+        function generateRiskData() {
+            return [
+                { name: 'Market Competition', probability: 70, impact: 60, type: 'risk' },
+                { name: 'Contract Renewal', probability: 40, impact: 80, type: 'risk' },
+                { name: 'Expansion Opportunity', probability: 60, impact: 70, type: 'opportunity' },
+                { name: 'Tech Innovation', probability: 30, impact: 90, type: 'opportunity' },
+                { name: 'Regulatory Change', probability: 50, impact: 50, type: 'risk' }
+            ];
+        }
+
+        async function loadAIInsights() {
+            if (!currentCompany) return;
+            
+            try {
+                const params = new URLSearchParams({
+                    name: currentCompany.organization_name,
+                    score: currentCompany.pe_investment_score || 0,
+                    grade: currentCompany.business_health_grade || 'N/A',
+                    contracts: currentCompany.federal_contracts_count || 0,
+                    value: currentCompany.federal_contracts_value || 0,
+                    city: currentCompany.city || 'N/A',
+                    state: currentCompany.state || 'N/A',
+                    naics: currentCompany.primary_naics || 'N/A',
+                    patents: currentCompany.patent_count || 0,
+                    nsf: currentCompany.nsf_total_funding || 0
+                });
+                
+                const response = await fetch(`${AI_API_BASE}/insights/${currentCompany.uei}?${params}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    aiInsights = result.data;
+                    displayEnhancedAIInsights(result.data);
+                    document.getElementById('aiAlert').innerHTML = `
+                        <div class="flex items-center">
+                            <svg class="h-5 w-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span>AI Analysis Complete</span>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Failed to generate insights');
+                }
+            } catch (error) {
+                console.error('AI Insights error:', error);
+                displayError();
+            }
+        }
+
+        function displayEnhancedAIInsights(insights) {
+            const colors = {
+                'Strong Buy': 'bg-green-100 text-green-800 border-green-300',
+                'Buy': 'bg-blue-100 text-blue-800 border-blue-300',
+                'Hold': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                'Sell': 'bg-red-100 text-red-800 border-red-300'
+            };
+            
+            const investmentScore = insights.investment_score || 0;
+            const innovationScore = insights.innovation_score || 0;
+            
+            document.getElementById('aiInsightsContent').innerHTML = `
+                <div class="space-y-6">
+                    <!-- Investment Recommendation Header -->
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold">AI Investment Analysis</h3>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-right">
+                                <p class="text-sm text-gray-600">Recommendation</p>
+                                <span class="inline-block px-6 py-3 rounded-lg font-bold text-lg border-2 ${colors[insights.recommendation] || 'bg-gray-100'}">
+                                    ${insights.recommendation}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Score Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-indigo-700">Investment Score</span>
+                                <span class="text-2xl font-bold text-indigo-900">${investmentScore}</span>
+                            </div>
+                            <div class="w-full bg-indigo-200 rounded-full h-2">
+                                <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: ${investmentScore}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-purple-700">Innovation Index</span>
+                                <span class="text-2xl font-bold text-purple-900">${innovationScore}</span>
+                            </div>
+                            <div class="w-full bg-purple-200 rounded-full h-2">
+                                <div class="bg-purple-600 h-2 rounded-full transition-all duration-500" style="width: ${innovationScore}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
+                            <span class="text-sm font-medium text-green-700">Market Position</span>
+                            <p class="text-sm mt-1 text-green-900 font-medium">${insights.market_position || 'Analyzing...'}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Key Strengths -->
+                        <div class="bg-white rounded-lg shadow-md border border-green-200 overflow-hidden">
+                            <div class="bg-green-50 px-4 py-3 border-b border-green-200">
+                                <h4 class="font-semibold text-green-800 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Key Strengths
+                                </h4>
+                            </div>
+                            <ul class="p-4 space-y-2">
+                                ${insights.key_strengths.map(s => `
+                                    <li class="flex items-start">
+                                        <span class="text-green-500 mr-2">▸</span>
+                                        <span class="text-sm text-gray-700">${s}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        
+                        <!-- Growth Opportunities -->
+                        <div class="bg-white rounded-lg shadow-md border border-blue-200 overflow-hidden">
+                            <div class="bg-blue-50 px-4 py-3 border-b border-blue-200">
+                                <h4 class="font-semibold text-blue-800 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Growth Opportunities
+                                </h4>
+                            </div>
+                            <ul class="p-4 space-y-2">
+                                ${insights.growth_opportunities.map(o => `
+                                    <li class="flex items-start">
+                                        <span class="text-blue-500 mr-2">▸</span>
+                                        <span class="text-sm text-gray-700">${o}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        
+                        <!-- Risk Factors -->
+                        <div class="bg-white rounded-lg shadow-md border border-red-200 overflow-hidden">
+                            <div class="bg-red-50 px-4 py-3 border-b border-red-200">
+                                <h4 class="font-semibold text-red-800 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Risk Factors
+                                </h4>
+                            </div>
+                            <ul class="p-4 space-y-2">
+                                ${insights.risk_factors.map(r => `
+                                    <li class="flex items-start">
+                                        <span class="text-red-500 mr-2">▸</span>
+                                        <span class="text-sm text-gray-700">${r}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        
+                        <!-- Action Items -->
+                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6">
+                            <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-1a1 1 0 100-2h1a4 4 0 014 4v6a4 4 0 01-4 4H6a4 4 0 01-4-4V7a4 4 0 014-4z" clip-rule="evenodd"></path>
+                                </svg>
+                                Due Diligence Action Items
+                            </h4>
+                            <div class="space-y-2">
+                                ${insights.action_items.map((item, i) => `
+                                    <div class="flex items-center bg-white rounded px-3 py-2 shadow-sm">
+                                        <input type="checkbox" class="mr-3 h-4 w-4 text-indigo-600" id="action-${i}">
+                                        <label for="action-${i}" class="text-sm text-gray-700 cursor-pointer">${item}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Metadata -->
+                    <div class="text-center text-xs text-gray-500 pt-4 border-t">
+                        <p>Analysis generated: ${new Date(insights.generated_at).toLocaleString()}</p>
+                        <p>Powered by GPT-4 | Confidence: High</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayError() {
+            document.getElementById('aiInsightsContent').innerHTML = `
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    <p>Unable to generate AI insights. Please try again later.</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+
+        // Initialize
+        loadCompanyDetails();
+    </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+flask==3.0.0
+flask-cors==4.0.0
+openai==1.6.1
+asyncio==3.4.3
+aiohttp==3.9.1
+uvicorn==0.25.0
+python-dotenv==1.0.0

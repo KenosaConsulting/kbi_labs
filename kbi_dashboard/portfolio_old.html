@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Analysis - KBI Labs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-indigo-600">KBI Labs - Portfolio Analysis</h1>
+                <a href="index.html" class="text-indigo-600 hover:text-indigo-800">← Back to Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Portfolio Summary -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Portfolio Companies</p>
+                <p id="totalCompanies" class="text-3xl font-bold text-indigo-600">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Total Contract Value</p>
+                <p id="totalValue" class="text-3xl font-bold text-green-600">$0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Average PE Score</p>
+                <p id="avgScore" class="text-3xl font-bold text-blue-600">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-600">Portfolio Health</p>
+                <p id="portfolioHealth" class="text-3xl font-bold">-</p>
+            </div>
+        </div>
+
+        <!-- Visualizations -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Industry Distribution -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">Industry Distribution</h3>
+                <canvas id="industryChart" width="400" height="300"></canvas>
+            </div>
+            
+            <!-- Geographic Distribution -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">Geographic Distribution</h3>
+                <div id="geoMap" style="height: 300px;"></div>
+            </div>
+        </div>
+
+<!-- Top Companies Table -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4">Top Portfolio Companies</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PE Score</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patents</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Value</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="topCompaniesTable" class="bg-white divide-y divide-gray-200">
+                    <!-- Companies will be loaded here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+        <!-- Risk/Return Matrix -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h3 class="text-lg font-semibold mb-4">Risk/Return Analysis</h3>
+            <div id="riskReturnMatrix" style="height: 400px;"></div>
+        </div>
+
+        <!-- Company Comparison Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="text-lg font-semibold">Portfolio Companies</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PE Score</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contracts</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="portfolioTable" class="bg-white divide-y divide-gray-200">
+                        <!-- Companies will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    
+    
+    
+    </main>
+
+    <script>
+        const API_BASE = '/api';
+        let portfolioData = [];
+        let charts = {};
+
+        async function // loadPortfolioData(); // Disabled - using dynamic loading {
+            try {
+                // Load all companies
+                const response = await fetch(`${API_BASE}/companies`);
+                const companies = await response.json();
+                
+                // Filter to top companies for portfolio
+                portfolioData = companies
+                    .filter(c => c.pe_investment_score >= 70)
+                    .sort((a, b) => b.pe_investment_score - a.pe_investment_score)
+                    .slice(0, 25);
+                
+                displayPortfolioSummary();
+                createVisualizations();
+                displayPortfolioTable();
+                
+            } catch (error) {
+                console.error('Failed to load portfolio data:', error);
+            }
+        }
+
+        function displayPortfolioSummary() {
+            const totalValue = portfolioData.reduce((sum, c) => sum + (c.federal_contracts_value || 0), 0);
+            const avgScore = portfolioData.reduce((sum, c) => sum + (c.pe_investment_score || 0), 0) / portfolioData.length;
+            
+            document.getElementById('totalCompanies').textContent = portfolioData.length;
+            document.getElementById('totalValue').textContent = `$${(totalValue / 1000000).toFixed(1)}M`;
+            document.getElementById('avgScore').textContent = avgScore.toFixed(1);
+            
+            const healthElement = document.getElementById('portfolioHealth');
+            if (avgScore >= 80) {
+                healthElement.textContent = 'Strong';
+                healthElement.className = 'text-3xl font-bold text-green-600';
+            } else if (avgScore >= 70) {
+                healthElement.textContent = 'Good';
+                healthElement.className = 'text-3xl font-bold text-blue-600';
+            } else {
+                healthElement.textContent = 'Moderate';
+                healthElement.className = 'text-3xl font-bold text-yellow-600';
+            }
+        }
+
+        function createVisualizations() {
+            createIndustryChart();
+            createGeographicMap();
+            createRiskReturnMatrix();
+        }
+
+        function createIndustryChart() {
+            const industries = {};
+            portfolioData.forEach(company => {
+                const naics = company.primary_naics ? company.primary_naics.substring(0, 2) : 'Unknown';
+                const industry = getIndustryName(naics);
+                industries[industry] = (industries[industry] || 0) + 1;
+            });
+            
+            const ctx = document.getElementById('industryChart').getContext('2d');
+            
+            if (charts.industry) charts.industry.destroy();
+            
+            charts.industry = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(industries),
+                    datasets: [{
+                        data: Object.values(industries),
+                        backgroundColor: [
+                            '#6366F1', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B',
+                            '#10B981', '#3B82F6', '#6B7280', '#84CC16', '#06B6D4'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createGeographicMap() {
+            const states = {};
+            portfolioData.forEach(company => {
+                const state = company.state || 'Unknown';
+                states[state] = (states[state] || 0) + 1;
+            });
+            
+            const data = [{
+                type: 'choropleth',
+                locationmode: 'USA-states',
+                locations: Object.keys(states),
+                z: Object.values(states),
+                text: Object.keys(states).map(s => `${s}: ${states[s]} companies`),
+                colorscale: 'Blues',
+                autocolorscale: false,
+                marker: {
+                    line: {
+                        color: 'rgb(255,255,255)',
+                        width: 2
+                    }
+                },
+                colorbar: {
+                    title: 'Companies'
+                }
+            }];
+            
+            const layout = {
+                geo: {
+                    scope: 'usa',
+                    projection: { type: 'albers usa' },
+                    showlakes: true,
+                    lakecolor: 'rgb(255, 255, 255)'
+                },
+                margin: { t: 0, b: 0, l: 0, r: 0 }
+            };
+            
+            Plotly.newPlot('geoMap', data, layout, {displayModeBar: false});
+        }
+
+        function createRiskReturnMatrix() {
+            const data = portfolioData.map(company => ({
+                x: company.pe_investment_score || 0,
+                y: company.federal_contracts_value / 1000000 || 0,
+                name: company.organization_name,
+                contracts: company.federal_contracts_count || 0
+            }));
+            
+            const trace = {
+                x: data.map(d => d.x),
+                y: data.map(d => d.y),
+                mode: 'markers+text',
+                type: 'scatter',
+                text: data.map(d => d.name),
+                textposition: 'top center',
+                hovertemplate: '<b>%{text}</b><br>PE Score: %{x}<br>Value: $%{y:.2f}M<extra></extra>',
+                marker: {
+                    size: data.map(d => Math.max(10, Math.min(30, d.contracts * 2))),
+                    color: data.map(d => d.x),
+                    colorscale: 'Viridis',
+                    showscale: true,
+                    colorbar: {
+                        title: 'PE Score'
+                    }
+                }
+            };
+            
+            const layout = {
+                xaxis: { 
+                    title: 'PE Investment Score',
+                    range: [65, 105]
+                },
+                yaxis: { 
+                    title: 'Contract Value ($M)',
+                    type: 'log'
+                },
+                hovermode: 'closest'
+            };
+            
+            Plotly.newPlot('riskReturnMatrix', [trace], layout);
+        }
+
+        function displayPortfolioTable() {
+            const tbody = document.getElementById('portfolioTable');
+            tbody.innerHTML = '';
+            
+            portfolioData.forEach(company => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${company.organization_name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.city}, ${company.state}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getScoreColor(company.pe_investment_score)}">
+                            ${company.pe_investment_score || 0}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(company.business_health_grade)}">
+                            ${company.business_health_grade || 'N/A'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.federal_contracts_count || 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${((company.federal_contracts_value || 0) / 1000000).toFixed(2)}M</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button onclick="window.location.href='company-details.html?uei=${company.uei}'" 
+                                class="text-indigo-600 hover:text-indigo-900">View Details</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function getIndustryName(naics) {
+            const industries = {
+                '23': 'Construction',
+                '31': 'Manufacturing', '32': 'Manufacturing', '33': 'Manufacturing',
+                '42': 'Wholesale Trade',
+                '44': 'Retail Trade', '45': 'Retail Trade',
+                '48': 'Transportation', '49': 'Transportation',
+                '51': 'Information Technology',
+                '52': 'Finance & Insurance',
+                '53': 'Real Estate',
+                '54': 'Professional Services',
+                '56': 'Administrative Services',
+                '61': 'Educational Services',
+                '62': 'Healthcare',
+                '71': 'Arts & Entertainment',
+                '72': 'Accommodation & Food',
+                '81': 'Other Services',
+                '92': 'Public Administration'
+            };
+            
+            return industries[naics] || 'Other';
+        }
+
+        function getScoreColor(score) {
+            if (score >= 80) return 'bg-green-100 text-green-800';
+            if (score >= 70) return 'bg-blue-100 text-blue-800';
+            if (score >= 50) return 'bg-yellow-100 text-yellow-800';
+            return 'bg-red-100 text-red-800';
+        }
+
+        function getGradeColor(grade) {
+            const colors = {
+                'A': 'bg-green-100 text-green-800',
+                'B': 'bg-blue-100 text-blue-800',
+                'C': 'bg-yellow-100 text-yellow-800',
+                'D': 'bg-orange-100 text-orange-800',
+                'F': 'bg-red-100 text-red-800'
+            };
+            
+            return colors[grade] || 'bg-gray-100 text-gray-800';
+        }
+
+        // Initialize
+        // loadPortfolioData(); // Disabled - using dynamic loading
+    </script>
+<!-- removed extra body close -->
+<!-- removed extra html close -->
+<script>
+// Fix for company name display
+function updatePortfolioTable() {
+    fetch('/api/companies')
+        .then(response => response.json())
+        .then(companies => {
+            const tbody = document.getElementById('topCompaniesTable');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            // Sort by score and take top companies
+            companies.sort((a, b) => (b.pe_investment_score || 0) - (a.pe_investment_score || 0));
+            
+            companies.slice(0, 25).forEach(company => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">
+                            ${company.company_name || company.organization_name || 'Unknown Company'}
+                        </div>
+                        <div class="text-sm text-gray-500">${company.uei || 'No UEI'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${company.city || 'Unknown'}, ${company.state || 'Unknown'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            ${company.pe_investment_score || 0}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${company.business_health_grade || 'N/A'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${company.patent_count || 0}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        $${((company.federal_contracts_value || 0) / 1000000).toFixed(2)}M
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="company-details.html?uei=${encodeURIComponent(company.uei || '')}" 
+                           class="text-indigo-600 hover:text-indigo-900">View Details</a>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error loading companies:', error));
+}
+
+// Call the fix on page load
+document.addEventListener('DOMContentLoaded', updateP<!-- removed extra body close -->o<!-- removed extra html close -->
+</script>
+</body>
+</html>
+<script>
+// Ensure portfolio loads on page ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updatePortfolioTable);
+} else {
+    // DOM is already ready
+    // updatePortfolioTable(); // Handled by tryLoadTable
+}
+</script>
+<script>
+// Fix for portfolio table loading
+(function() {
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    function tryLoadTable() {
+        const tbody = document.getElementById('topCompaniesTable');
+        
+        if (!tbody) {
+            console.log('Table body not found, attempt', attempts);
+            if (attempts < maxAttempts) {
+                attempts++;
+                setTimeout(tryLoadTable, 500);
+            }
+            return;
+        }
+        
+        console.log('Loading portfolio table...');
+        
+        fetch('/api/companies')
+            .then(response => response.json())
+            .then(companies => {
+                console.log(`Loaded ${companies.length} companies`);
+                
+                // Clear any existing content
+                tbody.innerHTML = '';
+                
+                // Sort by score
+                companies.sort((a, b) => (b.pe_investment_score || 0) - (a.pe_investment_score || 0));
+                
+                // Add rows
+                companies.slice(0, 25).forEach((company, index) => {
+                    const row = tbody.insertRow();
+                    row.className = 'hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${company.company_name || 'Unknown'}</div>
+                            <div class="text-sm text-gray-500">${company.uei || ''}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${company.city || ''}, ${company.state || ''}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                ${company.pe_investment_score || 0}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.business_health_grade || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.patent_count || 0}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${((company.federal_contracts_value || 0) / 1000000).toFixed(2)}M</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="company-details.html?uei=${company.uei}" class="text-indigo-600 hover:text-indigo-900">View Details</a>
+                        </td>
+                    `;
+                });
+                
+                console.log('Portfolio table loaded successfully!');
+            })
+            .catch(error => console.error('Error loading portfolio:', error));
+    }
+    
+    // Start trying when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryLoadTable);
+    } else {
+        tryLoadTable();
+    }
+})();
+</script>
+</body>
+</html>
