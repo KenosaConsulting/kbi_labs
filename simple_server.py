@@ -14,6 +14,10 @@ from datetime import datetime, timedelta
 import logging
 import json
 import os
+import sys
+
+# Add src directory to path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -371,12 +375,21 @@ async def health_check():
         ]
     }
 
+# Add government intelligence routes
+try:
+    from api.routers.government_intelligence import router as gov_intel_router
+    app.include_router(gov_intel_router, prefix="/api")
+    logger.info("Government intelligence API routes loaded")
+except ImportError as e:
+    logger.warning(f"Could not load government intelligence routes: {e}")
+
 if __name__ == "__main__":
     import uvicorn
     print("🚀 Starting KBI Labs Procurement Platform...")
     print("📊 Dashboard: http://localhost:8000/dashboard")
     print("🎯 API Docs: http://localhost:8000/docs")
     print("💚 Health: http://localhost:8000/health")
+    print("🌐 Government Intelligence: http://localhost:8000/api/government-intelligence/")
     print("🌐 Server accessible on all network interfaces")
     print("💡 To make it internet accessible, run: ngrok http 8000")
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
