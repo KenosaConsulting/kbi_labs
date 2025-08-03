@@ -231,23 +231,28 @@ async def root():
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard():
-    """SMB Contractor Intelligence Dashboard"""
+    """SMB Contractor Intelligence Dashboard - Optimized Version"""
     try:
-        with open("smb_contractor_dashboard.html", "r") as f:
+        with open("dashboard_fixed.html", "r") as f:
             html_content = f.read()
         return HTMLResponse(content=html_content)
     except FileNotFoundError:
-        # Fallback to basic dashboard if file not found
-        html_content = """
-        <!DOCTYPE html>
-        <html><head><title>Dashboard Loading...</title></head>
-        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-        <h1>🔄 Loading SMB Contractor Dashboard...</h1>
-        <p>If this persists, please check that smb_contractor_dashboard.html exists.</p>
-        <a href="/" style="color: #2563eb;">← Back to Home</a>
-        </body></html>
-        """
-        return HTMLResponse(content=html_content)
+        # Fallback to original if fixed version not found
+        try:
+            with open("smb_contractor_dashboard.html", "r") as f:
+                html_content = f.read()
+            return HTMLResponse(content=html_content)
+        except FileNotFoundError:
+            html_content = """
+            <!DOCTYPE html>
+            <html><head><title>Dashboard Loading...</title></head>
+            <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+            <h1>🔄 Loading SMB Contractor Dashboard...</h1>
+            <p>Dashboard files not found. Please check installation.</p>
+            <a href="/basic" style="color: #2563eb;">→ Try Basic Dashboard</a>
+            </body></html>
+            """
+            return HTMLResponse(content=html_content)
 
 @app.get("/test", response_class=HTMLResponse)
 async def dashboard_test():
@@ -308,6 +313,46 @@ async def basic_dashboard():
         return HTMLResponse(content=html_content)
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Basic dashboard not found</h1>", status_code=404)
+
+@app.get("/optimized", response_class=HTMLResponse)
+async def optimized_dashboard():
+    """Optimized React Dashboard"""
+    try:
+        with open("dashboard_optimized.html", "r") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Optimized dashboard not found</h1>", status_code=404)
+
+@app.get("/original", response_class=HTMLResponse)
+async def original_dashboard():
+    """Original Complex Dashboard"""
+    try:
+        with open("smb_contractor_dashboard.html", "r") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Original dashboard not found</h1>", status_code=404)
+
+@app.get("/debug-simple", response_class=HTMLResponse)
+async def debug_simple_dashboard():
+    """Simple Debug Dashboard"""
+    try:
+        with open("dashboard_debug_simple.html", "r") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Debug dashboard not found</h1>", status_code=404)
+
+@app.get("/simple-working", response_class=HTMLResponse)  
+async def simple_working_dashboard():
+    """Simple Working Dashboard (No React)"""
+    try:
+        with open("dashboard_simple_working.html", "r") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Simple working dashboard not found</h1>", status_code=404)
 
 @app.get("/api/opportunities", response_model=List[OpportunityResponse])
 async def get_opportunities(
