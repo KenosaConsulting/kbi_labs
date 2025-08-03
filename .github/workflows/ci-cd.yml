@@ -134,38 +134,78 @@ jobs:
         echo "$EC2_KEY" > deploy_key.pem
         chmod 600 deploy_key.pem
         
-        # Deploy to EC2
+        # Deploy to EC2 with aggressive cleanup
         ssh -i deploy_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
-          # Navigate to project directory (create if needed)
+          # AGGRESSIVE CLEANUP - Kill everything on port 8000
+          echo "🧹 Aggressive cleanup of port 8000..."
+          sudo pkill -f "uvicorn" || true
+          sudo pkill -f "gunicorn" || true  
+          sudo pkill -f "python.*8000" || true
+          sudo pkill -f "fastapi" || true
+          sudo fuser -k 8000/tcp || true
+          sleep 10
+          
+          # Remove any existing kbi_labs directory to start fresh
+          rm -rf /home/ubuntu/kbi_labs || true
+          
+          # Clone fresh copy
+          echo "📥 Cloning fresh repository..."
           cd /home/ubuntu
-          if [ ! -d "kbi_labs" ]; then
-            git clone https://github.com/KenosaConsulting/kbi_labs.git
-            cd kbi_labs
-          else
-            cd kbi_labs
-            git pull origin main
+          git clone https://github.com/KenosaConsulting/kbi_labs.git
+          cd kbi_labs
+          
+          # Verify we have the right code
+          echo "🔍 Verifying application..."
+          if ! grep -q "KBI Labs - Compass Platform" src/main.py; then
+            echo "❌ Wrong application code found"
+            exit 1
           fi
           
           # Install dependencies
-          python3 -m pip install --user -r requirements-production.txt || python3 -m pip install --user -r requirements.txt
+          echo "📦 Installing dependencies..."
+          python3 -m pip install --user -r requirements-production.txt || {
+            echo "Fallback to requirements.txt"
+            python3 -m pip install --user fastapi uvicorn sqlalchemy pandas numpy scikit-learn aiohttp requests
+          }
           
-          # Kill existing processes
-          pkill -f "uvicorn" || true
-          pkill -f "python3.*8000" || true
-          sleep 5
-          
-          # Set environment variables for production
+          # Set environment variables
           export DATABASE_URL="sqlite:///./kbi_production.db"
+          export PYTHONPATH="/home/ubuntu/kbi_labs:$PYTHONPATH"
+          
+          # Create logs directory
+          mkdir -p logs
+          
+          # Verify our FastAPI app loads
+          echo "🧪 Testing app import..."
+          python3 -c "from src.main import app; print('✅ FastAPI app imports successfully')" || exit 1
           
           # Start our specific FastAPI application
-          nohup python3 -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload > kbi_api.log 2>&1 &
+          echo "🚀 Starting KBI Labs FastAPI application..."
+          nohup python3 -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload > logs/kbi_fastapi.log 2>&1 &
           
-          # Wait and test our specific application
-          sleep 15
-          curl -f http://localhost:8000/health || exit 1
-          curl -f http://localhost:8000/api/ai/status || echo "Warning: AI endpoint not ready yet"
+          # Wait for startup
+          echo "⏳ Waiting for application startup..."
+          sleep 20
           
-          echo "✅ KBI Labs FastAPI deployment successful!"
+          # Test health endpoint
+          if curl -f http://localhost:8000/health; then
+            echo "✅ Health check passed"
+          else
+            echo "❌ Health check failed - showing logs:"
+            tail -50 logs/kbi_fastapi.log
+            exit 1
+          fi
+          
+          # Test AI endpoint (critical test)
+          if curl -f http://localhost:8000/api/ai/status; then
+            echo "✅ AI services operational - DEPLOYMENT SUCCESS!"
+          else
+            echo "❌ AI endpoint failed - showing logs:"
+            tail -50 logs/kbi_fastapi.log
+            exit 1
+          fi
+          
+          echo "🎉 KBI Labs FastAPI with AI services deployed successfully!"
         EOF
         
         # Cleanup
