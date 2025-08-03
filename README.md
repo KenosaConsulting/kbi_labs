@@ -144,18 +144,13 @@ data points   feature creation   Fraud Detection   scoring     visualization
 # Start all services
 docker-compose up -d
 
-<<<<<<< HEAD
-# View logs  
-=======
 # View logs
->>>>>>> f4d9a2272d26318741d62dd847d96b8c728950a4
 docker-compose logs -f api
 
 # Stop services
 docker-compose down
 ```
 
-<<<<<<< HEAD
 ### **NEW: ML Development**
 ```bash
 # ML environment setup
@@ -286,18 +281,16 @@ KBI Labs + ML = **The most sophisticated procurement intelligence platform ever 
 ---
 
 *🤖 Enhanced with Machine Learning • 📊 Powered by Open Source • 🎯 Built for Government Contracting Excellence*
-=======
-## 📈 Mission
 
-To democratize business intelligence by transforming raw data into actionable insights that empower small businesses to compete and investors to discover hidden opportunities.
+---
 
-## Recent Updates (v2.0.0)
+## 📈 **Production Infrastructure**
 
 ### 🎯 Production Monitoring
 - Prometheus metrics collection
 - Grafana dashboards
 - Health check endpoints
-- System resource monitoring
+- System resource monitoring  
 - Request/response tracking
 
 ### 🏛️ USASpending Integration
@@ -307,7 +300,7 @@ To democratize business intelligence by transforming raw data into actionable in
 - Awards summaries
 - Cached responses for performance
 
-### 📊 API Endpoints
+### 📊 **Core API Endpoints**
 
 #### Health & Monitoring
 - `GET /health` - Basic health check
@@ -322,7 +315,34 @@ To democratize business intelligence by transforming raw data into actionable in
 #### Enrichment
 - `POST /api/v3/enrichment/enrich` - Enrich company data
 
-### 🚀 Quick Start
+### 🏗️ Infrastructure Status (v3.0.0)
+
+#### ✅ Completed Components
+
+**Real-Time Streaming**
+- Apache Kafka with 4 topics configured
+- Handles 250M+ events daily
+- Producer/Consumer implementations
+- Kafka UI for monitoring
+
+**Data Storage**
+- PostgreSQL primary database
+- Full schema with 5 tables
+- Connection pooling
+- Async operations support
+
+**API Gateway**
+- FastAPI with OpenAPI docs
+- RESTful endpoints
+- Health monitoring
+- Prometheus metrics
+
+**Caching Layer**
+- Redis for high-speed ops
+- API integration
+- Session management ready
+
+### 🚀 Production Quick Start
 
 ```bash
 # Check API health
@@ -333,37 +353,4 @@ curl http://localhost:8001/api/v3/usaspending/search/{UEI}
 
 # Monitor performance
 ./simple_monitor.sh
-
-
-
----
-
-## 🏗️ Infrastructure Status (v3.0.0)
-
-### ✅ Completed Components
-
-#### Real-Time Streaming
-- Apache Kafka with 4 topics configured
-- Handles 250M+ events daily
-- Producer/Consumer implementations
-- Kafka UI for monitoring
-
-#### Data Storage
-- PostgreSQL primary database
-- Full schema with 5 tables
-- Connection pooling
-- Async operations support
-
-#### API Gateway
-- FastAPI with OpenAPI docs
-- RESTful endpoints
-- Health monitoring
-- Prometheus metrics
-
-#### Caching Layer
-- Redis for high-speed ops
-- API integration
-- Session management ready
-
-### 🚀 Quick Start
->>>>>>> f4d9a2272d26318741d62dd847d96b8c728950a4
+```

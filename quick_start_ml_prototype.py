@@ -365,6 +365,8 @@ class KBIProcurementMLPrototype:
         """
         Load trained models and preprocessors
         """
+        import os
+        
         # Load models
         model_files = ['contract_success_model.pkl', 'fraud_detection_model.pkl']
         for model_file in model_files:
