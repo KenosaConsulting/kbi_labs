@@ -14,8 +14,8 @@ import json
 # Create FastAPI app
 app = FastAPI(
     title='KBI Labs - Compass Platform',
-    description='SMB Intelligence and Business Discovery Platform',
-    version='1.0.0'
+    description='AI-Powered SMB Intelligence and Business Discovery Platform',
+    version='2.1.0'
 )
 
 # Add CORS middleware
