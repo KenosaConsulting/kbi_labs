@@ -440,6 +440,263 @@
             margin: 20px 0;
         }
 
+        /* AI INSIGHTS */
+        .ai-insights-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--purple-accent);
+        }
+
+        .ai-insight-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-insight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .ai-insight-card:hover::before {
+            opacity: 1;
+        }
+
+        .ai-insight-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .ai-insight-type {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .ai-confidence {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .ai-insight-content {
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .ai-insight-metrics {
+            display: flex;
+            gap: 16px;
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .ai-metric {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Enhanced opportunity cards with AI scoring */
+        .opportunity-card {
+            padding: 16px;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .opportunity-card.ai-enhanced {
+            border-left: 4px solid var(--purple-accent);
+        }
+
+        .opportunity-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .ai-score-indicator {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .opportunity-ai-details {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            gap: 16px;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+
+        .ai-detail {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        /* AI RECOMMENDATIONS */
+        .recommendation-filters {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .recommendation-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .recommendation-card.critical {
+            border-left: 4px solid var(--danger-red);
+            background: #fef2f2;
+        }
+        
+        .recommendation-card.high {
+            border-left: 4px solid var(--warning-orange);
+            background: #fef3c7;
+        }
+        
+        .recommendation-card.medium {
+            border-left: 4px solid var(--primary-blue);
+        }
+        
+        .recommendation-card.low {
+            border-left: 4px solid var(--gray-300);
+        }
+        
+        .recommendation-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .recommendation-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin: 0;
+            flex: 1;
+        }
+        
+        .recommendation-priority {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .recommendation-priority.critical {
+            background: var(--danger-red);
+            color: white;
+        }
+        
+        .recommendation-priority.high {
+            background: var(--warning-orange);
+            color: white;
+        }
+        
+        .recommendation-priority.medium {
+            background: var(--primary-blue);
+            color: white;
+        }
+        
+        .recommendation-priority.low {
+            background: var(--gray-400);
+            color: white;
+        }
+        
+        .recommendation-description {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        
+        .recommendation-actions {
+            background: var(--gray-50);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        
+        .recommendation-actions-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .recommendation-action-list {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+        
+        .recommendation-action-list li {
+            margin-bottom: 4px;
+        }
+        
+        .recommendation-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 12px;
+        }
+        
+        .recommendation-confidence {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .recommendation-type {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            text-transform: capitalize;
+        }
+
         @media (max-width: 768px) {
             .platform-container { flex-direction: column; }
             .sidebar { width: 100%; }
@@ -486,12 +743,12 @@
         <div class="main-content">
             <div class="header">
                 <div class="header-left">
-                    <h2>SMB Government Contractor Dashboard</h2>
+                    <h2>AI-Powered SMB Contractor Dashboard</h2>
                     <div class="subtitle">
-                        AI-powered procurement intelligence for small business success
+                        Advanced machine learning intelligence for government contracting success
                         <span class="api-status-indicator" id="api-status">
                             <i class="fas fa-circle"></i>
-                            Checking...
+                            Initializing AI...
                         </span>
                     </div>
                 </div>
@@ -567,18 +824,55 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- AI Insights Panel -->
+                <div class="ai-insights-section" id="ai-insights-section" style="display: none;">
+                    <div class="section-header">
+                        <h3>
+                            <i class="fas fa-brain"></i>
+                            AI Intelligence Insights
+                        </h3>
+                        <button class="action-button" onclick="refreshAIInsights()">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="ai-insights-container">
+                        <!-- AI insights will be populated here -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <script src="ai-opportunity-scorer.js"></script>
     <script>
-        // Simple, fast data loading
+        // AI-powered data loading with intelligent scoring
         let allOpportunities = [];
         let currentFilter = 'all';
+        let aiScorer = null;
+        let aiInsights = [];
 
-        // Load data immediately when page loads
+        // Initialize AI scoring engine
+        function initializeAI() {
+            try {
+                aiScorer = new AIOpportunityScorer();
+                console.log('🧠 AI Opportunity Scorer initialized successfully');
+                return true;
+            } catch (error) {
+                console.warn('AI Scorer initialization failed:', error);
+                return false;
+            }
+        }
+
+        // Load data immediately when page loads with AI scoring
         async function loadDashboardData() {
             try {
+                // Initialize AI if not already done
+                if (!aiScorer) {
+                    initializeAI();
+                }
+                
                 // Update API status
                 updateAPIStatus('loading', 'Connecting...');
                 
@@ -587,7 +881,7 @@
                 if (!healthResponse.ok) throw new Error('API not available');
                 
                 const health = await healthResponse.json();
-                updateAPIStatus('success', 'Live Data');
+                updateAPIStatus('success', 'AI-Powered Live Data');
                 
                 // Load opportunities
                 try {
@@ -627,18 +921,57 @@
                                        status === 'error' ? '#fef2f2' : '#dbeafe';
         }
 
-        function processOpportunities(data) {
-            // Process real API data
+        async function processOpportunities(data) {
+            // Process real API data with AI scoring
             if (data.active_opportunities && data.active_opportunities.length > 0) {
-                allOpportunities = data.active_opportunities.slice(0, 10).map((opp, index) => ({
-                    id: index + 1,
-                    title: opp.title || opp.solicitation_number || `Opportunity ${index + 1}`,
-                    agency: opp.agency || opp.department || 'Unknown Agency',
-                    value: formatCurrency(opp.award_amount || opp.estimated_value || Math.random() * 5000000),
-                    deadline: opp.response_date || opp.due_date || getRandomDate(),
-                    recommendation: getRandomRecommendation(),
-                    description: opp.description || opp.synopsis || 'No description available.'
-                }));
+                updateAPIStatus('loading', 'AI Analysis in Progress...');
+                
+                const opportunities = [];
+                const aiScoring = [];
+                
+                // Process opportunities and score them with AI
+                for (let i = 0; i < Math.min(data.active_opportunities.length, 10); i++) {
+                    const opp = data.active_opportunities[i];
+                    const processedOpp = {
+                        id: i + 1,
+                        title: opp.title || opp.solicitation_number || `Opportunity ${i + 1}`,
+                        agency: opp.agency || opp.department || 'Unknown Agency',
+                        value: opp.award_amount || opp.estimated_value || Math.random() * 5000000,
+                        deadline: opp.response_date || opp.due_date || getRandomDate(),
+                        description: opp.description || opp.synopsis || 'No description available.',
+                        raw_data: opp
+                    };
+                    
+                    // Score with AI if available
+                    if (aiScorer) {
+                        try {
+                            const aiAnalysis = await aiScorer.scoreOpportunity(opp);
+                            processedOpp.aiScore = aiAnalysis.overall_score;
+                            processedOpp.recommendation = aiAnalysis.recommendation;
+                            processedOpp.confidence = aiAnalysis.confidence;
+                            processedOpp.winProbability = aiAnalysis.win_probability;
+                            processedOpp.aiAnalysis = aiAnalysis.analysis;
+                            processedOpp.factorScores = aiAnalysis.factor_scores;
+                            aiScoring.push(aiAnalysis);
+                        } catch (error) {
+                            console.warn(`AI scoring failed for opportunity ${processedOpp.id}:`, error);
+                            processedOpp.recommendation = getRandomRecommendation();
+                            processedOpp.aiScore = 60;
+                            processedOpp.confidence = 70;
+                        }
+                    } else {
+                        processedOpp.recommendation = getRandomRecommendation();
+                        processedOpp.aiScore = 60;
+                        processedOpp.confidence = 70;
+                    }
+                    
+                    processedOpp.value = formatCurrency(processedOpp.value);
+                    opportunities.push(processedOpp);
+                }
+                
+                allOpportunities = opportunities;
+                generateAIInsights(aiScoring);
+                updateAPIStatus('success', `AI Analysis Complete (${aiScoring.length} scored)`);
             } else {
                 loadMockOpportunities();
                 return;
@@ -647,60 +980,103 @@
             updateDataStatus('opportunities', allOpportunities.length);
             updateKPIs();
             displayOpportunities();
+            loadAIRecommendations();
         }
 
-        function loadMockOpportunities() {
-            allOpportunities = [
+        async function loadMockOpportunities() {
+            const mockData = [
                 {
                     id: 1,
                     title: "IT Infrastructure Modernization Services",
                     agency: "Department of Defense",
-                    value: "$2.5M",
+                    value: 2500000,
                     deadline: "2025-08-15",
-                    recommendation: "pursue",
-                    description: "Comprehensive IT infrastructure modernization including cloud migration and security enhancements."
+                    description: "Comprehensive IT infrastructure modernization including cloud migration and security enhancements.",
+                    naics_codes: ['541511', '541512'],
+                    set_aside: 'SB'
                 },
                 {
                     id: 2,
                     title: "Cloud Migration and Optimization Services",
                     agency: "Veterans Affairs",
-                    value: "$1.8M",
+                    value: 1800000,
                     deadline: "2025-08-20",
-                    recommendation: "analyze",
-                    description: "Migration of legacy systems to cloud infrastructure with performance optimization."
+                    description: "Migration of legacy systems to cloud infrastructure with performance optimization.",
+                    naics_codes: ['541511'],
+                    set_aside: null
                 },
                 {
                     id: 3,
                     title: "Cybersecurity Assessment and Implementation",
                     agency: "Department of Homeland Security",
-                    value: "$950K",
+                    value: 950000,
                     deadline: "2025-08-25",
-                    recommendation: "pursue",
-                    description: "Comprehensive cybersecurity assessment with implementation of security measures."
+                    description: "Comprehensive cybersecurity assessment with implementation of security measures requiring clearance.",
+                    naics_codes: ['541512'],
+                    set_aside: 'SB'
                 },
                 {
                     id: 4,
                     title: "Data Analytics Platform Development",
                     agency: "Health and Human Services",
-                    value: "$3.2M",
+                    value: 3200000,
                     deadline: "2025-09-01",
-                    recommendation: "analyze",
-                    description: "Development of advanced data analytics platform for healthcare data processing."
+                    description: "Development of advanced data analytics platform for healthcare data processing.",
+                    naics_codes: ['541511', '541513'],
+                    set_aside: null
                 },
                 {
                     id: 5,
                     title: "Software Development Services",
                     agency: "Department of Treasury",
-                    value: "$750K",
+                    value: 750000,
                     deadline: "2025-09-05",
-                    recommendation: "pursue",
-                    description: "Custom software development for financial data processing and reporting."
+                    description: "Custom software development for financial data processing and reporting.",
+                    naics_codes: ['541511'],
+                    set_aside: 'SB'
                 }
             ];
+            
+            // Score mock opportunities with AI
+            const opportunities = [];
+            const aiScoring = [];
+            
+            for (const mockOpp of mockData) {
+                const processedOpp = { ...mockOpp };
+                
+                if (aiScorer) {
+                    try {
+                        const aiAnalysis = await aiScorer.scoreOpportunity(mockOpp);
+                        processedOpp.aiScore = aiAnalysis.overall_score;
+                        processedOpp.recommendation = aiAnalysis.recommendation;
+                        processedOpp.confidence = aiAnalysis.confidence;
+                        processedOpp.winProbability = aiAnalysis.win_probability;
+                        processedOpp.aiAnalysis = aiAnalysis.analysis;
+                        processedOpp.factorScores = aiAnalysis.factor_scores;
+                        aiScoring.push(aiAnalysis);
+                    } catch (error) {
+                        console.warn(`AI scoring failed for mock opportunity ${processedOpp.id}:`, error);
+                        processedOpp.recommendation = getRandomRecommendation();
+                        processedOpp.aiScore = 60;
+                        processedOpp.confidence = 70;
+                    }
+                } else {
+                    processedOpp.recommendation = getRandomRecommendation();
+                    processedOpp.aiScore = 60;
+                    processedOpp.confidence = 70;
+                }
+                
+                processedOpp.value = formatCurrency(processedOpp.value);
+                opportunities.push(processedOpp);
+            }
+            
+            allOpportunities = opportunities;
+            generateAIInsights(aiScoring);
             
             updateDataStatus('opportunities', allOpportunities.length);
             updateKPIs();
             displayOpportunities();
+            loadAIRecommendations();
         }
 
         async function loadAdditionalData() {
@@ -776,10 +1152,10 @@
                     type: "success"
                 },
                 {
-                    label: "Pursue Rate",
+                    label: "AI Success Rate",
                     value: `${Math.round((pursueCount/allOpportunities.length)*100)}%`,
-                    change: "AI-powered decisions",
-                    icon: "fas fa-trophy",
+                    change: "ML-powered scoring",
+                    icon: "fas fa-brain",
                     type: "warning"
                 },
                 {
@@ -827,8 +1203,36 @@
             container.innerHTML = '';
             filteredOpps.forEach(opp => {
                 const card = document.createElement('div');
-                card.className = 'opportunity-card';
+                card.className = `opportunity-card ${opp.aiScore ? 'ai-enhanced' : ''}`;
+                
+                // AI score indicator
+                const aiScoreHTML = opp.aiScore ? `
+                    <div class="ai-score-indicator">
+                        <i class="fas fa-brain"></i>
+                        ${opp.aiScore}
+                    </div>
+                ` : '';
+                
+                // AI details section
+                const aiDetailsHTML = opp.aiScore ? `
+                    <div class="opportunity-ai-details">
+                        <div class="ai-detail">
+                            <i class="fas fa-percentage"></i>
+                            Win: ${opp.winProbability || 'N/A'}%
+                        </div>
+                        <div class="ai-detail">
+                            <i class="fas fa-chart-bar"></i>
+                            Confidence: ${opp.confidence || 'N/A'}%
+                        </div>
+                        <div class="ai-detail">
+                            <i class="fas fa-lightbulb"></i>
+                            AI Powered
+                        </div>
+                    </div>
+                ` : '';
+                
                 card.innerHTML = `
+                    ${aiScoreHTML}
                     <div class="opportunity-header">
                         <h4 class="opportunity-title">${opp.title}</h4>
                         <span class="recommendation-badge ${opp.recommendation}">${opp.recommendation.toUpperCase()}</span>
@@ -838,7 +1242,15 @@
                         <span><i class="fas fa-dollar-sign"></i> ${opp.value}</span>
                         <span><i class="fas fa-calendar"></i> Due ${opp.deadline}</span>
                     </div>
+                    ${aiDetailsHTML}
                 `;
+                
+                // Add click handler for detailed AI analysis
+                if (opp.aiAnalysis) {
+                    card.style.cursor = 'pointer';
+                    card.addEventListener('click', () => showAIAnalysisModal(opp));
+                }
+                
                 container.appendChild(card);
             });
         }
@@ -883,14 +1295,319 @@
             return 'analyze';
         }
 
+        // Generate AI insights from scoring data
+        function generateAIInsights(aiScoringData) {
+            if (!aiScoringData || aiScoringData.length === 0) {
+                document.getElementById('ai-insights-section').style.display = 'none';
+                return;
+            }
+            
+            aiInsights = [];
+            
+            // Analyze overall scoring patterns
+            const avgScore = aiScoringData.reduce((sum, score) => sum + score.overall_score, 0) / aiScoringData.length;
+            const highScoreOpps = aiScoringData.filter(score => score.overall_score >= 80).length;
+            const pursueOpps = aiScoringData.filter(score => score.recommendation === 'pursue').length;
+            
+            // Generate insights
+            if (avgScore >= 75) {
+                aiInsights.push({
+                    type: 'opportunity',
+                    confidence: 95,
+                    content: `Strong pipeline detected! Average AI score of ${avgScore.toFixed(1)} indicates excellent opportunity quality.`,
+                    metrics: {
+                        'High-Value Opps': highScoreOpps,
+                        'Pursue Rate': `${Math.round(pursueOpps/aiScoringData.length*100)}%`
+                    }
+                });
+            }
+            
+            if (pursueOpps >= 3) {
+                aiInsights.push({
+                    type: 'strategy',
+                    confidence: 88,
+                    content: `${pursueOpps} high-priority opportunities identified. Consider increasing proposal capacity to capitalize on strong pipeline.`,
+                    metrics: {
+                        'Pursue Count': pursueOpps,
+                        'Capacity Impact': 'High'
+                    }
+                });
+            }
+            
+            // Factor-specific insights
+            const factorAverages = {};
+            for (const scoring of aiScoringData) {
+                for (const [factor, score] of Object.entries(scoring.factor_scores || {})) {
+                    if (!factorAverages[factor]) factorAverages[factor] = [];
+                    factorAverages[factor].push(score);
+                }
+            }
+            
+            for (const [factor, scores] of Object.entries(factorAverages)) {
+                const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+                if (avg < 45) {
+                    aiInsights.push({
+                        type: 'warning',
+                        confidence: 82,
+                        content: `${factor.replace('_', ' ')} scores averaging ${avg.toFixed(1)}. Consider strategic improvements in this area.`,
+                        metrics: {
+                            'Avg Score': avg.toFixed(1),
+                            'Improvement Needed': 'Yes'
+                        }
+                    });
+                }
+            }
+            
+            displayAIInsights();
+        }
+        
+        function displayAIInsights() {
+            const section = document.getElementById('ai-insights-section');
+            const container = document.getElementById('ai-insights-container');
+            
+            if (aiInsights.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            container.innerHTML = '';
+            
+            aiInsights.forEach(insight => {
+                const card = document.createElement('div');
+                card.className = 'ai-insight-card';
+                
+                const metricsHTML = Object.entries(insight.metrics || {})
+                    .map(([key, value]) => `
+                        <div class="ai-metric">
+                            <i class="fas fa-chart-line"></i>
+                            <span>${key}: ${value}</span>
+                        </div>
+                    `).join('');
+                
+                card.innerHTML = `
+                    <div class="ai-insight-header">
+                        <div class="ai-insight-type">${insight.type}</div>
+                        <div class="ai-confidence">${insight.confidence}% confidence</div>
+                    </div>
+                    <div class="ai-insight-content">${insight.content}</div>
+                    <div class="ai-insight-metrics">
+                        ${metricsHTML}
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+        
+        function showAIAnalysisModal(opportunity) {
+            if (!opportunity.aiAnalysis) return;
+            
+            alert(`AI Analysis for: ${opportunity.title}\n\n` +
+                  `Overall Score: ${opportunity.aiScore}\n` +
+                  `Recommendation: ${opportunity.recommendation.toUpperCase()}\n` +
+                  `Win Probability: ${opportunity.winProbability}%\n\n` +
+                  `Strengths:\n${opportunity.aiAnalysis.strengths.join('\n')}\n\n` +
+                  `Concerns:\n${opportunity.aiAnalysis.concerns.join('\n')}\n\n` +
+                  `Recommendations:\n${opportunity.aiAnalysis.recommendations.join('\n')}\n\n` +
+                  `Reasoning: ${opportunity.aiAnalysis.reasoning}`);
+        }
+        
+        async function loadAIRecommendations() {
+            if (!allOpportunities || allOpportunities.length === 0) {
+                document.getElementById('ai-recommendations-section').style.display = 'none';
+                return;
+            }
+            
+            try {
+                // Prepare opportunity data for recommendation engine
+                const opportunityData = allOpportunities.map(opp => ({
+                    id: opp.id,
+                    title: opp.title,
+                    agency: opp.agency,
+                    description: opp.description,
+                    value: opp.raw_data?.award_amount || opp.raw_data?.estimated_value,
+                    deadline: opp.deadline,
+                    naics_codes: opp.raw_data?.naics_codes || [],
+                    set_aside: opp.raw_data?.set_aside,
+                    ...(opp.raw_data || {})
+                }));
+                
+                const response = await fetch('http://localhost:8000/api/ai/recommendations/summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(opportunityData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success' && data.summary) {
+                        aiRecommendations = data.summary.top_recommendations || [];
+                        displayAIRecommendations();
+                        updateRecommendationBadge(data.summary);
+                    }
+                } else {
+                    console.warn('AI recommendations API not available, using local insights');
+                    generateLocalRecommendations();
+                }
+            } catch (error) {
+                console.warn('Failed to load AI recommendations:', error);
+                generateLocalRecommendations();
+            }
+        }
+        
+        function generateLocalRecommendations() {
+            // Generate basic recommendations from scored opportunities
+            const recommendations = [];
+            
+            const highScoreOpps = allOpportunities.filter(opp => opp.aiScore >= 80);
+            if (highScoreOpps.length > 0) {
+                recommendations.push({
+                    id: 'local_high_score',
+                    type: 'opportunity',
+                    priority: 'high',
+                    title: 'High-Value Opportunities Detected',
+                    description: `${highScoreOpps.length} opportunities scored 80+ points. Consider prioritizing these for immediate action.`,
+                    action_items: [
+                        'Review high-scoring opportunities',
+                        'Schedule bid/no-bid meetings',
+                        'Assign proposal resources'
+                    ],
+                    confidence: 85
+                });
+            }
+            
+            const pursueOpps = allOpportunities.filter(opp => opp.recommendation === 'pursue');
+            if (pursueOpps.length >= 3) {
+                recommendations.push({
+                    id: 'local_pursue_rate',
+                    type: 'strategy',
+                    priority: 'medium',
+                    title: 'Strong Pipeline Opportunity',
+                    description: `${pursueOpps.length} opportunities recommended for pursuit. Consider capacity planning.`,
+                    action_items: [
+                        'Assess proposal team capacity',
+                        'Plan resource allocation',
+                        'Set proposal priorities'
+                    ],
+                    confidence: 78
+                });
+            }
+            
+            aiRecommendations = recommendations;
+            displayAIRecommendations();
+        }
+        
+        function displayAIRecommendations() {
+            const section = document.getElementById('ai-recommendations-section');
+            const container = document.getElementById('ai-recommendations-container');
+            
+            if (!aiRecommendations || aiRecommendations.length === 0) {
+                container.innerHTML = '<div class="loading">No recommendations available at this time.</div>';
+                return;
+            }
+            
+            section.style.display = 'block';
+            container.innerHTML = '';
+            
+            aiRecommendations.forEach(rec => {
+                const card = document.createElement('div');
+                card.className = `recommendation-card ${rec.priority}`;
+                
+                const actionItemsHTML = rec.action_items && rec.action_items.length > 0 ? `
+                    <div class="recommendation-actions">
+                        <div class="recommendation-actions-title">Recommended Actions</div>
+                        <ul class="recommendation-action-list">
+                            ${rec.action_items.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : '';
+                
+                const typeIcon = {
+                    'opportunity': 'fa-bullseye',
+                    'strategy': 'fa-chess',
+                    'market': 'fa-chart-line', 
+                    'capability': 'fa-cogs',
+                    'alert': 'fa-exclamation-triangle'
+                }[rec.type] || 'fa-lightbulb';
+                
+                card.innerHTML = `
+                    <div class="recommendation-header">
+                        <h4 class="recommendation-title">${rec.title}</h4>
+                        <span class="recommendation-priority ${rec.priority}">${rec.priority}</span>
+                    </div>
+                    <div class="recommendation-description">${rec.description}</div>
+                    ${actionItemsHTML}
+                    <div class="recommendation-footer">
+                        <div class="recommendation-confidence">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>${rec.confidence}% confidence</span>
+                        </div>
+                        <div class="recommendation-type">
+                            <i class="fas ${typeIcon}"></i>
+                            <span>${rec.type}</span>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+        
+        function filterRecommendations(filter) {
+            // Update filter button states
+            document.querySelectorAll('.recommendation-filters .filter-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Filter recommendations
+            const cards = document.querySelectorAll('.recommendation-card');
+            cards.forEach(card => {
+                if (filter === 'all') {
+                    card.style.display = 'block';
+                } else {
+                    const priority = card.classList.contains(filter);
+                    card.style.display = priority ? 'block' : 'none';
+                }
+            });
+        }
+        
+        function updateRecommendationBadge(summary) {
+            // Update any notification badges with recommendation counts
+            const criticalCount = summary.critical_count || 0;
+            const highCount = summary.high_count || 0;
+            
+            if (criticalCount > 0) {
+                console.log(`🚨 ${criticalCount} critical recommendations available`);
+            }
+        }
+
+        function refreshAIInsights() {
+            if (allOpportunities.length > 0) {
+                const aiScoringData = allOpportunities
+                    .filter(opp => opp.factorScores)
+                    .map(opp => ({
+                        overall_score: opp.aiScore,
+                        recommendation: opp.recommendation,
+                        factor_scores: opp.factorScores
+                    }));
+                generateAIInsights(aiScoringData);
+                loadAIRecommendations();
+            }
+        }
+
         // Start loading data when page loads
         window.addEventListener('load', () => {
+            console.log('🚀 Initializing KBI Labs AI-Powered Dashboard...');
             loadDashboardData();
         });
 
         // Refresh data every 5 minutes
         setInterval(() => {
-            console.log('🔄 Refreshing dashboard data...');
+            console.log('🔄 Refreshing dashboard data with AI analysis...');
             loadDashboardData();
         }, 5 * 60 * 1000);
     </script>

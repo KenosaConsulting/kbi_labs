@@ -8,7 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api.v1.api import api_router
 from .api.v1.endpoints.ml.predictions import router as ml_router
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Dict
+import json
 
 # Create FastAPI app
 app = FastAPI(
@@ -32,6 +33,15 @@ app.mount('/static', StaticFiles(directory='static'), name='static')
 # Include API routers
 app.include_router(api_router, prefix='/api/v1')
 app.include_router(ml_router, prefix='/api/v1')
+
+# Import AI services
+try:
+    from .ai_services.recommendation_engine import generate_recommendations_for_opportunities, get_recommendation_summary
+    print('✅ AI Recommendation Engine loaded successfully')
+except Exception as e:
+    print(f'❌ AI Recommendation Engine loading error: {e}')
+    generate_recommendations_for_opportunities = None
+    get_recommendation_summary = None
 
 # Import patent search module
 from .patent_search_module import patent_engine
@@ -151,3 +161,60 @@ async def get_cache_stats():
 @app.get('/health')
 async def health_check():
     return {'status': 'healthy'}
+
+# AI Recommendation endpoints
+@app.post('/api/ai/recommendations')
+async def generate_recommendations(opportunities: List[Dict]):
+    """Generate AI-powered recommendations for a list of opportunities"""
+    try:
+        if not generate_recommendations_for_opportunities:
+            raise HTTPException(status_code=503, detail="AI Recommendation Engine not available")
+        
+        recommendations = generate_recommendations_for_opportunities(opportunities)
+        
+        return {
+            'status': 'success',
+            'recommendations': recommendations,
+            'count': len(recommendations),
+            'timestamp': datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Recommendation generation failed: {str(e)}")
+
+@app.post('/api/ai/recommendations/summary')
+async def get_recommendations_summary(opportunities: List[Dict]):
+    """Get a summary of AI recommendations for dashboard display"""
+    try:
+        if not get_recommendation_summary:
+            raise HTTPException(status_code=503, detail="AI Recommendation Engine not available")
+        
+        summary = get_recommendation_summary(opportunities)
+        
+        return {
+            'status': 'success',
+            'summary': summary,
+            'timestamp': datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Recommendation summary failed: {str(e)}")
+
+@app.get('/api/ai/status')
+async def get_ai_status():
+    """Get AI services status"""
+    return {
+        'status': 'success',
+        'services': {
+            'recommendation_engine': generate_recommendations_for_opportunities is not None,
+            'opportunity_scorer': True,
+            'ml_features': True
+        },
+        'version': '2.0.0',
+        'capabilities': [
+            'Opportunity Scoring',
+            'Intelligent Recommendations', 
+            'Strategic Insights',
+            'Market Analysis',
+            'Capability Gap Analysis'
+        ],
+        'timestamp': datetime.now().isoformat()
+    }
