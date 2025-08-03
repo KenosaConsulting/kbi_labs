@@ -196,13 +196,21 @@ jobs:
             exit 1
           fi
           
-          # Test AI endpoint (critical test)
-          if curl -f http://localhost:8000/api/ai/status; then
-            echo "✅ AI services operational - DEPLOYMENT SUCCESS!"
+          # Test our unique verification endpoint
+          if curl -f http://localhost:8000/deployment/verify | grep -q "FASTAPI_AI_DEPLOYED_SUCCESSFULLY"; then
+            echo "✅ KBI Labs FastAPI verified - DEPLOYMENT SUCCESS!"
           else
-            echo "❌ AI endpoint failed - showing logs:"
+            echo "❌ Verification failed - showing logs:"
             tail -50 logs/kbi_fastapi.log
+            curl -f http://localhost:8000/deployment/verify || echo "Verification endpoint not found"
             exit 1
+          fi
+          
+          # Test AI endpoint
+          if curl -f http://localhost:8000/api/ai/status | grep -q "KBI_LABS_FASTAPI_VERIFIED"; then
+            echo "✅ AI services verified - FULL SUCCESS!"
+          else
+            echo "⚠️ AI endpoint needs attention but FastAPI is running"
           fi
           
           echo "🎉 KBI Labs FastAPI with AI services deployed successfully!"

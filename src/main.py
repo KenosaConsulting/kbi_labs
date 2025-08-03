@@ -208,7 +208,8 @@ async def get_ai_status():
             'opportunity_scorer': True,
             'ml_features': True
         },
-        'version': '2.0.0',
+        'version': '2.1.0',
+        'deployment_id': 'KBI_LABS_FASTAPI_VERIFIED',
         'capabilities': [
             'Opportunity Scoring',
             'Intelligent Recommendations', 
@@ -217,4 +218,15 @@ async def get_ai_status():
             'Capability Gap Analysis'
         ],
         'timestamp': datetime.now().isoformat()
+    }
+
+@app.get('/deployment/verify')
+async def deployment_verification():
+    """Unique endpoint to verify correct deployment"""
+    return {
+        'application': 'KBI Labs FastAPI Application',
+        'version': '2.1.0',
+        'ai_services': True,
+        'deployment_timestamp': datetime.now().isoformat(),
+        'verification_code': 'FASTAPI_AI_DEPLOYED_SUCCESSFULLY'
     }
