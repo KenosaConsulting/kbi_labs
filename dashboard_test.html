@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBI Labs - Dashboard Testing Interface</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #1d4ed8;
+        }
+        .result-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { border-left: 4px solid #10b981; }
+        .error { border-left: 4px solid #ef4444; }
+        .loading { 
+            color: #6b7280; 
+            font-style: italic;
+        }
+        .endpoint-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .endpoint-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .endpoint-card h4 {
+            margin: 0 0 10px 0;
+            color: #2563eb;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background: #10b981; }
+        .status-error { background: #ef4444; }
+        .status-loading { background: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 KBI Labs Dashboard Testing Interface</h1>
+            <p>Interactive testing for government intelligence APIs and dashboard functionality</p>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Quick API Health Check</h2>
+            <button class="test-button" onclick="testAPIHealth()">Check All APIs</button>
+            <div id="health-results" class="result-box" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Core API Endpoints Testing</h2>
+            <div class="endpoint-grid">
+                <div class="endpoint-card">
+                    <h4>Comprehensive Intelligence</h4>
+                    <button class="test-button" onclick="testEndpoint('comprehensive-intelligence')">Test</button>
+                    <div id="comprehensive-intelligence-status" class="status-indicator"></div>
+                    <span id="comprehensive-intelligence-text">Not tested</span>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>Procurement Opportunities</h4>
+                    <button class="test-button" onclick="testEndpoint('procurement-opportunities')">Test</button>
+                    <div id="procurement-opportunities-status" class="status-indicator"></div>
+                    <span id="procurement-opportunities-text">Not tested</span>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>Enhanced GSA Intelligence</h4>
+                    <button class="test-button" onclick="testEndpoint('enhanced-gsa-intelligence')">Test</button>
+                    <div id="enhanced-gsa-intelligence-status" class="status-indicator"></div>
+                    <span id="enhanced-gsa-intelligence-text">Not tested</span>
+                </div>
+                
+                <div class="endpoint-card">
+                    <h4>GovInfo Intelligence</h4>
+                    <button class="test-button" onclick="testEndpoint('govinfo-intelligence')">Test</button>
+                    <div id="govinfo-intelligence-status" class="status-indicator"></div>
+                    <span id="govinfo-intelligence-text">Not tested</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Data Explorer</h2>
+            <button class="test-button" onclick="exploreData()">Explore All Data</button>
+            <div id="data-results" class="result-box" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🌐 Dashboard Connectivity</h2>
+            <p>Main Dashboard: <a href="/dashboard" target="_blank">Open Dashboard</a></p>
+            <p>API Documentation: <a href="/docs" target="_blank">Open API Docs</a></p>
+            <button class="test-button" onclick="testDashboardLoad()">Test Dashboard Loading</button>
+            <div id="dashboard-results" class="result-box" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Test API Health
+        async function testAPIHealth() {
+            const resultsDiv = document.getElementById('health-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.className = 'result-box loading';
+            resultsDiv.textContent = 'Testing API health...';
+
+            try {
+                const response = await fetch('/api/government-intelligence/health');
+                const data = await response.json();
+                
+                resultsDiv.className = 'result-box success';
+                resultsDiv.textContent = `✅ API Health Check Results:
+Overall Status: ${data.overall_status}
+Timestamp: ${data.timestamp}
+
+API Keys Available:
+${Object.entries(data.api_keys_available).map(([key, val]) => `  ${key}: ${val ? '✅' : '❌'}`).join('\n')}
+
+Integration Status:
+${Object.entries(data.integrations).map(([key, val]) => `  ${key}: ${val}`).join('\n')}`;
+            } catch (error) {
+                resultsDiv.className = 'result-box error';
+                resultsDiv.textContent = `❌ Health check failed: ${error.message}`;
+            }
+        }
+
+        // Test specific endpoint
+        async function testEndpoint(endpoint) {
+            const statusDiv = document.getElementById(`${endpoint}-status`);
+            const textDiv = document.getElementById(`${endpoint}-text`);
+            
+            statusDiv.className = 'status-indicator status-loading';
+            textDiv.textContent = 'Testing...';
+
+            try {
+                const response = await fetch(`/api/government-intelligence/${endpoint}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    statusDiv.className = 'status-indicator status-success';
+                    textDiv.textContent = 'Working ✅';
+                    
+                    // Show sample data
+                    if (endpoint === 'comprehensive-intelligence') {
+                        const summary = data.data.executive_summary;
+                        textDiv.textContent += ` (${summary.active_opportunities} opportunities, ${Object.keys(data.data.data_sources).length || 8} sources)`;
+                    } else if (endpoint === 'procurement-opportunities') {
+                        const summary = data.data.summary;
+                        textDiv.textContent += ` (${summary.total_active_opportunities} active opps)`;
+                    }
+                } else {
+                    statusDiv.className = 'status-indicator status-error';
+                    textDiv.textContent = 'Error ❌';
+                }
+            } catch (error) {
+                statusDiv.className = 'status-indicator status-error';
+                textDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Explore all data
+        async function exploreData() {
+            const resultsDiv = document.getElementById('data-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.className = 'result-box loading';
+            resultsDiv.textContent = 'Exploring all available data...';
+
+            try {
+                const response = await fetch('/api/government-intelligence/comprehensive-intelligence');
+                const data = await response.json();
+                
+                resultsDiv.className = 'result-box success';
+                
+                const summary = data.data.executive_summary;
+                const marketOpps = data.data.market_opportunities;
+                const policyIntel = data.data.policy_intelligence;
+                
+                resultsDiv.textContent = `🔍 COMPREHENSIVE DATA EXPLORATION
+
+📊 EXECUTIVE SUMMARY:
+${Object.entries(summary).map(([key, value]) => `  ${key.replace(/_/g, ' ')}: ${value}`).join('\n')}
+
+🎯 MARKET OPPORTUNITIES:
+  Active Opportunities: ${marketOpps.active_opportunities?.length || 0}
+  Small Business Opportunities: ${marketOpps.small_business_opportunities?.length || 0}
+  
+${marketOpps.active_opportunities?.slice(0, 3).map((opp, i) => `  ${i+1}. ${opp.title}
+     Department: ${opp.department || 'N/A'}
+     Posted: ${opp.posted_date || 'N/A'}`).join('\n') || '  No opportunities data'}
+
+🏛️ POLICY INTELLIGENCE:
+  Recent Regulations: ${policyIntel.recent_regulations?.length || 0}
+  Congressional Activity: ${policyIntel.congressional_activity?.length || 0}
+  GovInfo Documents: ${policyIntel.govinfo_documents?.length || 0}
+
+🔗 DATA SOURCES:
+${data.data.data_sources.map((source, i) => `  ${i+1}. ${source}`).join('\n')}
+
+⏰ Last Updated: ${data.data.last_updated}`;
+            } catch (error) {
+                resultsDiv.className = 'result-box error';
+                resultsDiv.textContent = `❌ Data exploration failed: ${error.message}`;
+            }
+        }
+
+        // Test dashboard loading
+        async function testDashboardLoad() {
+            const resultsDiv = document.getElementById('dashboard-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.className = 'result-box loading';
+            resultsDiv.textContent = 'Testing dashboard accessibility...';
+
+            try {
+                const response = await fetch('/dashboard');
+                
+                if (response.ok) {
+                    resultsDiv.className = 'result-box success';
+                    resultsDiv.textContent = `✅ Dashboard Loading Test Results:
+Status: ${response.status} ${response.statusText}
+Content-Type: ${response.headers.get('content-type')}
+
+Dashboard is accessible! You can:
+1. Click the "Open Dashboard" link above
+2. Use browser dev tools (F12) to monitor API calls
+3. Check the Network tab to see data loading
+4. Look for any JavaScript errors in Console tab
+
+API Endpoints the dashboard will call:
+• /api/government-intelligence/comprehensive-intelligence
+• /api/government-intelligence/procurement-opportunities  
+• /api/government-intelligence/enhanced-gsa-intelligence
+• /api/government-intelligence/govinfo-intelligence`;
+                } else {
+                    resultsDiv.className = 'result-box error';
+                    resultsDiv.textContent = `❌ Dashboard not accessible: ${response.status} ${response.statusText}`;
+                }
+            } catch (error) {
+                resultsDiv.className = 'result-box error';
+                resultsDiv.textContent = `❌ Dashboard test failed: ${error.message}`;
+            }
+        }
+
+        // Auto-run health check on page load
+        window.onload = function() {
+            testAPIHealth();
+        };
+    </script>
+</body>
+</html>

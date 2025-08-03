@@ -10,10 +10,11 @@ from typing import Dict, List, Optional
 import logging
 from datetime import datetime
 
-from src.integrations.gsa_website_index import get_federal_website_intelligence, get_agency_digital_profile
+from src.integrations.gsa_website_index import get_federal_website_intelligence, get_agency_digital_profile, get_enhanced_gsa_intelligence
 from src.integrations.federal_register import get_contractor_regulatory_intelligence, get_agency_regulatory_profile
 from src.integrations.congress_gov import get_congressional_contractor_intelligence, get_contractor_bills
 from src.integrations.sam_opportunities import get_real_procurement_opportunities, get_agency_opportunities
+from src.integrations.govinfo import get_govinfo_congressional_intelligence, get_govinfo_documents
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/government-intelligence", tags=["government-intelligence"])
@@ -301,6 +302,7 @@ async def get_comprehensive_intelligence():
         regulatory_data = await get_contractor_regulatory_intelligence()
         congressional_data = await get_congressional_contractor_intelligence()
         opportunities_data = await get_real_procurement_opportunities()
+        govinfo_data = await get_govinfo_congressional_intelligence()
         
         # Combine all intelligence
         comprehensive_report = {
@@ -309,6 +311,7 @@ async def get_comprehensive_intelligence():
                 "active_opportunities": opportunities_data.get('summary', {}).get('total_active_opportunities', 0),
                 "contractor_relevant_regulations": regulatory_data.get('summary', {}).get('total_regulations', 0),
                 "congressional_bills_tracked": congressional_data.get('summary', {}).get('total_contractor_bills', 0),
+                "govinfo_documents": govinfo_data.get('summary', {}).get('total_congressional_documents', 0),
                 "estimated_opportunity_value": opportunities_data.get('summary', {}).get('estimated_total_value', 0)
             },
             "digital_intelligence": {
@@ -324,7 +327,8 @@ async def get_comprehensive_intelligence():
             "policy_intelligence": {
                 "recent_regulations": regulatory_data.get('recent_regulations', [])[:5],
                 "high_impact_policies": regulatory_data.get('policy_changes', [])[:3],
-                "congressional_activity": congressional_data.get('top_contractor_bills', [])[:5]
+                "congressional_activity": congressional_data.get('top_contractor_bills', [])[:5],
+                "govinfo_documents": govinfo_data.get('congressional_documents', [])[:5]
             },
             "competitive_intelligence": {
                 "trending_naics": opportunities_data.get('naics_breakdown', {}),
@@ -336,6 +340,7 @@ async def get_comprehensive_intelligence():
                 "Federal Register API", 
                 "Congress.gov API",
                 "SAM.gov Opportunities API",
+                "GovInfo API",
                 "USASpending.gov",
                 "USPTO Patents",
                 "FRED Economic Data"
@@ -353,6 +358,64 @@ async def get_comprehensive_intelligence():
         logger.error(f"Error generating comprehensive intelligence: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/enhanced-gsa-intelligence", response_model=Dict)
+async def get_enhanced_gsa_scanning():
+    """Get enhanced GSA intelligence with Site Scanning API data"""
+    try:
+        logger.info("Fetching enhanced GSA intelligence")
+        intelligence = await get_enhanced_gsa_intelligence()
+        
+        return {
+            "status": "success",
+            "data": intelligence,
+            "source": "GSA Federal Website Index + Site Scanning API",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching enhanced GSA intelligence: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/govinfo-intelligence", response_model=Dict)
+async def get_govinfo_intelligence():
+    """Get congressional documents and federal publications from GovInfo"""
+    try:
+        logger.info("Fetching GovInfo congressional intelligence")
+        intelligence = await get_govinfo_congressional_intelligence()
+        
+        return {
+            "status": "success",
+            "data": intelligence,
+            "source": "GovInfo API",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching GovInfo intelligence: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/govinfo-documents", response_model=Dict)
+async def get_govinfo_document_feed(
+    doc_type: str = Query("congressional", description="Document type: congressional or federal_register"),
+    limit: int = Query(20, le=100, description="Maximum number of documents to return")
+):
+    """Get specific document types from GovInfo"""
+    try:
+        logger.info(f"Fetching GovInfo {doc_type} documents")
+        documents = await get_govinfo_documents(doc_type)
+        
+        return {
+            "status": "success",
+            "data": documents[:limit],
+            "document_type": doc_type,
+            "count": len(documents[:limit]),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching GovInfo documents: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/health")
 async def health_check():
     """Health check for government intelligence services"""
@@ -365,9 +428,11 @@ async def health_check():
             "api_keys_available": available_apis,
             "integrations": {
                 "gsa_website_index": "operational",
+                "gsa_site_scanning": "operational" if available_apis.get('gsa') else "public_data_only",
                 "federal_register": "operational",
                 "congress_gov": "operational" if available_apis.get('congress_gov') else "mock_data",
-                "sam_opportunities": "operational" if available_apis.get('sam_gov') else "mock_data"
+                "sam_opportunities": "operational" if available_apis.get('sam_gov') else "mock_data",
+                "govinfo": "operational" if available_apis.get('govinfo') else "mock_data"
             },
             "overall_status": "healthy",
             "timestamp": datetime.now().isoformat()

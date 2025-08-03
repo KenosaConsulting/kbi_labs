@@ -249,6 +249,66 @@ async def dashboard():
         """
         return HTMLResponse(content=html_content)
 
+@app.get("/test", response_class=HTMLResponse)
+async def dashboard_test():
+    """Interactive Dashboard Testing Interface"""
+    try:
+        with open("dashboard_test.html", "r") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Test interface not found</h1>", status_code=404)
+
+@app.get("/debug", response_class=HTMLResponse)
+async def dashboard_debug():
+    """Simple Dashboard Debug Interface"""
+    try:
+        with open("debug_dashboard.html", "r") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Debug interface not found</h1>", status_code=404)
+
+@app.get("/simple-test", response_class=HTMLResponse)
+async def simple_dashboard_test():
+    """Simple Dashboard Test Interface"""
+    try:
+        with open("dashboard_simple_test.html", "r") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Simple test interface not found</h1>", status_code=404)
+
+@app.get("/minimal", response_class=HTMLResponse)
+async def minimal_dashboard():
+    """Minimal React Dashboard Test"""
+    try:
+        with open("dashboard_minimal.html", "r") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Minimal dashboard not found</h1>", status_code=404)
+
+@app.get("/react-test", response_class=HTMLResponse)
+async def react_test():
+    """React Loading Test"""
+    try:
+        with open("react_test.html", "r") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>React test not found</h1>", status_code=404)
+
+@app.get("/basic", response_class=HTMLResponse)
+async def basic_dashboard():
+    """Basic HTML Dashboard (No React)"""
+    try:
+        with open("dashboard_basic.html", "r") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Basic dashboard not found</h1>", status_code=404)
+
 @app.get("/api/opportunities", response_model=List[OpportunityResponse])
 async def get_opportunities(
     limit: int = Query(20, le=100),
@@ -383,6 +443,33 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load government intelligence routes: {e}")
 
+@app.get("/api/test-connection")
+async def test_frontend_connection():
+    """Test endpoint for frontend-backend connectivity"""
+    try:
+        return {
+            "status": "success",
+            "message": "Frontend-backend connection working!",
+            "server_time": datetime.now().isoformat(),
+            "available_endpoints": [
+                "/api/government-intelligence/comprehensive-intelligence",
+                "/api/government-intelligence/procurement-opportunities", 
+                "/api/government-intelligence/enhanced-gsa-intelligence",
+                "/api/government-intelligence/govinfo-intelligence",
+                "/api/government-intelligence/health"
+            ],
+            "test_data": {
+                "sample_opportunity": SAMPLE_OPPORTUNITIES[0] if SAMPLE_OPPORTUNITIES else None,
+                "total_opportunities": len(SAMPLE_OPPORTUNITIES)
+            }
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Connection test failed: {str(e)}",
+            "server_time": datetime.now().isoformat()
+        }
+
 if __name__ == "__main__":
     import uvicorn
     print("🚀 Starting KBI Labs Procurement Platform...")
@@ -390,6 +477,7 @@ if __name__ == "__main__":
     print("🎯 API Docs: http://localhost:8000/docs")
     print("💚 Health: http://localhost:8000/health")
     print("🌐 Government Intelligence: http://localhost:8000/api/government-intelligence/")
+    print("🔧 Test Connection: http://localhost:8000/api/test-connection")
     print("🌐 Server accessible on all network interfaces")
     print("💡 To make it internet accessible, run: ngrok http 8000")
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

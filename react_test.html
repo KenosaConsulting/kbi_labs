@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🧪 React Loading Test</h1>
+    <div id="react-status">⏳ Loading React...</div>
+    <div id="root"></div>
+    
+    <script>
+        // Test if basic JavaScript works
+        console.log('JavaScript is working');
+        document.getElementById('react-status').innerHTML = '✅ JavaScript Working';
+        
+        // Test React loading step by step
+        let step = 1;
+        
+        function updateStatus(message, isError = false) {
+            const statusDiv = document.getElementById('react-status');
+            statusDiv.innerHTML = `Step ${step}: ${message}`;
+            statusDiv.className = isError ? 'status error' : 'status success';
+            console.log(`Step ${step}: ${message}`);
+            step++;
+        }
+    </script>
+    
+    <!-- Load React step by step -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" 
+            onload="updateStatus('React library loaded')"
+            onerror="updateStatus('React library FAILED to load', true)"></script>
+    
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+            onload="updateStatus('ReactDOM library loaded')"
+            onerror="updateStatus('ReactDOM library FAILED to load', true)"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"
+            onload="updateStatus('Babel library loaded')"
+            onerror="updateStatus('Babel library FAILED to load', true)"></script>
+    
+    <script type="text/babel">
+        try {
+            updateStatus('Babel is processing JSX');
+            
+            const { useState } = React;
+            
+            function TestComponent() {
+                const [count, setCount] = useState(0);
+                
+                updateStatus('React component created successfully');
+                
+                return React.createElement('div', {}, [
+                    React.createElement('h2', { key: 'title' }, '🎉 React is Working!'),
+                    React.createElement('p', { key: 'desc' }, 'If you see this, React + Babel are loaded correctly'),
+                    React.createElement('button', { 
+                        key: 'btn',
+                        onClick: () => setCount(count + 1)
+                    }, `Clicked ${count} times`),
+                    React.createElement('div', { key: 'api' }, [
+                        React.createElement('h3', { key: 'api-title' }, 'API Test:'),
+                        React.createElement('button', {
+                            key: 'api-btn',
+                            onClick: async () => {
+                                try {
+                                    const response = await fetch('/api/government-intelligence/health');
+                                    const data = await response.json();
+                                    alert(`API Works! Status: ${data.overall_status}`);
+                                } catch (error) {
+                                    alert(`API Error: ${error.message}`);
+                                }
+                            }
+                        }, 'Test API Call')
+                    ])
+                ]);
+            }
+            
+            updateStatus('Attempting to render component');
+            ReactDOM.render(React.createElement(TestComponent), document.getElementById('root'));
+            updateStatus('✅ React component rendered successfully!');
+            
+        } catch (error) {
+            updateStatus(`React error: ${error.message}`, true);
+            console.error('React error:', error);
+        }
+    </script>
+</body>
+</html>
