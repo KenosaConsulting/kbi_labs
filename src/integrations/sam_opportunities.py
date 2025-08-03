@@ -12,6 +12,7 @@ from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 import json
+import random
 
 from config.api_config import get_api_config, get_headers, has_api_key
 
@@ -49,6 +50,9 @@ class SAMOpportunitiesAPI:
         self.session = None
         self.cache = {}
         self.cache_duration = 1800  # 30 minutes
+        self.max_retries = 3
+        self.base_delay = 1.0  # Base delay for exponential backoff
+        self.max_delay = 60.0  # Maximum delay
         
         if not has_api_key('sam_gov'):
             logger.warning("SAM.gov API key not available")
@@ -61,6 +65,57 @@ class SAMOpportunitiesAPI:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.session:
             await self.session.close()
+    
+    async def _make_request_with_retry(self, url: str, params: Dict) -> Dict:
+        """Make API request with exponential backoff retry for rate limiting"""
+        last_exception = None
+        
+        for attempt in range(self.max_retries + 1):
+            try:
+                if not self.session:
+                    connector = aiohttp.TCPConnector(ssl=False)
+                    self.session = aiohttp.ClientSession(connector=connector, headers=self.headers)
+                
+                async with self.session.get(url, params=params) as response:
+                    if response.status == 200:
+                        return await response.json()
+                    elif response.status == 429:
+                        # Rate limited - calculate delay
+                        if attempt < self.max_retries:
+                            delay = min(
+                                self.base_delay * (2 ** attempt) + random.uniform(0, 1),
+                                self.max_delay
+                            )
+                            logger.warning(f"SAM.gov rate limited (429). Retrying in {delay:.1f}s (attempt {attempt + 1}/{self.max_retries})")
+                            await asyncio.sleep(delay)
+                            continue
+                        else:
+                            logger.error("SAM.gov API rate limit exceeded - max retries reached")
+                            raise Exception(f"SAM.gov API rate limit exceeded: {response.status}")
+                    else:
+                        logger.error(f"SAM.gov API error: {response.status}")
+                        raise Exception(f"SAM.gov API error: {response.status}")
+                        
+            except asyncio.TimeoutError:
+                if attempt < self.max_retries:
+                    delay = min(self.base_delay * (2 ** attempt), self.max_delay)
+                    logger.warning(f"SAM.gov request timeout. Retrying in {delay:.1f}s")
+                    await asyncio.sleep(delay)
+                    continue
+                else:
+                    raise Exception("SAM.gov API timeout after retries")
+            except Exception as e:
+                last_exception = e
+                if attempt < self.max_retries:
+                    delay = min(self.base_delay * (2 ** attempt), self.max_delay)
+                    logger.warning(f"SAM.gov request failed: {e}. Retrying in {delay:.1f}s")
+                    await asyncio.sleep(delay)
+                    continue
+                else:
+                    break
+        
+        # If we get here, all retries failed
+        raise last_exception or Exception("SAM.gov API request failed after retries")
     
     async def get_active_opportunities(self, limit: int = 100) -> List[Dict]:
         """Get active procurement opportunities"""
@@ -86,30 +141,23 @@ class SAMOpportunitiesAPI:
                 'limit': limit
             }
             
-            if not self.session:
-                connector = aiohttp.TCPConnector(ssl=False)
-                self.session = aiohttp.ClientSession(connector=connector, headers=self.headers)
+            # Use retry mechanism
+            data = await self._make_request_with_retry(url, params)
             
-            async with self.session.get(url, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    opportunities = data.get('opportunitiesData', [])
+            if data:
+                opportunities = data.get('opportunitiesData', [])
                     
-                    # Process and enhance opportunities
-                    processed_opps = [self._process_opportunity(opp) for opp in opportunities]
-                    
-                    # Cache results
-                    self.cache[cache_key] = processed_opps
-                    
-                    logger.info(f"Fetched {len(processed_opps)} active opportunities from SAM.gov")
-                    return processed_opps
-                    
-                elif response.status == 401:
-                    logger.error("SAM.gov API authentication failed - check API key")
-                    return self._get_mock_opportunities()
-                else:
-                    logger.error(f"SAM.gov API error: {response.status}")
-                    return self._get_mock_opportunities()
+                # Process and enhance opportunities
+                processed_opps = [self._process_opportunity(opp) for opp in opportunities]
+                
+                # Cache results
+                self.cache[cache_key] = processed_opps
+                
+                logger.info(f"Fetched {len(processed_opps)} active opportunities from SAM.gov")
+                return processed_opps
+            else:
+                logger.warning("No data received from SAM.gov API")
+                return self._get_mock_opportunities()
                     
         except Exception as e:
             logger.error(f"Error fetching SAM.gov opportunities: {e}")

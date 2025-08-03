@@ -211,8 +211,10 @@ class FederalRegisterAPI:
         """Score document relevance to government contractors"""
         try:
             score = 0.0
-            title = doc.get('title', '').lower()
-            abstract = doc.get('abstract', '').lower()
+            title = doc.get('title') or ''
+            abstract = doc.get('abstract') or ''
+            title = title.lower() if title else ''
+            abstract = abstract.lower() if abstract else ''
             text = f"{title} {abstract}"
             
             # High-value keywords
@@ -264,8 +266,10 @@ class FederalRegisterAPI:
         """Analyze potential policy impact on contractors"""
         try:
             impact_score = 0.0
-            title = doc.get('title', '').lower()
-            abstract = doc.get('abstract', '').lower()
+            title = doc.get('title') or ''
+            abstract = doc.get('abstract') or ''
+            title = title.lower() if title else ''
+            abstract = abstract.lower() if abstract else ''
             
             # High-impact policy indicators
             high_impact_indicators = [
@@ -423,8 +427,9 @@ async def get_agency_regulatory_profile(agency_name: str):
         # Filter regulations by agency
         agency_regs = [
             reg for reg in recent_regs 
-            if any(agency_name.lower() in agency.lower() 
-                  for agency in reg.get('agency_names', []))
+            if any(agency_name.lower() in (agency or '').lower() 
+                  for agency in reg.get('agency_names', [])
+                  if agency is not None)
         ]
         
         return {

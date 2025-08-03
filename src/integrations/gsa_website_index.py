@@ -13,6 +13,7 @@ from datetime import datetime
 import asyncio
 import aiohttp
 from dataclasses import dataclass
+from io import StringIO
 
 from config.api_config import get_api_config, get_headers, has_api_key
 
@@ -60,7 +61,7 @@ class GSAWebsiteIndex:
                 async with session.get(self.csv_url) as response:
                     if response.status == 200:
                         csv_content = await response.text()
-                        df = pd.read_csv(pd.StringIO(csv_content))
+                        df = pd.read_csv(StringIO(csv_content))
                         
                         # Process and cache data
                         processed_data = self._process_website_data(df)

@@ -112,35 +112,68 @@ class GovInfoAPI:
         """Get Federal Register documents related to contracting"""
         try:
             if not has_api_key('govinfo'):
+                logger.info("GovInfo API key not available - returning mock data")
                 return self._get_mock_federal_register_docs()
             
-            # Calculate date range
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=days_back)
-            
-            url = f"{self.base_url}/collections/FR"
+            # Try a simpler API call first - just get recent FR packages
+            # The GovInfo API might not support complex date range queries on this endpoint
+            url = f"{self.base_url}/collections/FR/packages"
             params = {
                 'api_key': self.config.get('api_key'),
-                'publishedDate': f"{start_date.strftime('%Y-%m-%d')}|{end_date.strftime('%Y-%m-%d')}",
-                'limit': limit
+                'pageSize': min(limit, 100),  # GovInfo has limits
+                'format': 'json'
             }
+            
+            logger.info(f"Calling GovInfo Federal Register API: {url}")
             
             if not self.session:
                 connector = aiohttp.TCPConnector(ssl=False)
                 self.session = aiohttp.ClientSession(connector=connector, headers=self.headers)
             
             async with self.session.get(url, params=params) as response:
+                response_text = await response.text()
+                logger.info(f"GovInfo FR API response status: {response.status}")
+                
                 if response.status == 200:
-                    data = await response.json()
-                    documents = data.get('packages', [])
-                    
-                    processed_docs = [self._process_document(doc) for doc in documents]
-                    contractor_docs = [doc for doc in processed_docs if self._is_contractor_relevant(doc)]
-                    
-                    logger.info(f"Fetched {len(contractor_docs)} contractor-relevant FR documents")
-                    return contractor_docs
+                    try:
+                        data = await response.json()
+                        packages = data.get('packages', [])
+                        
+                        if packages:
+                            # Process and filter documents
+                            processed_docs = []
+                            for doc in packages[:limit]:  # Limit processing
+                                try:
+                                    processed = self._process_document(doc)
+                                    if self._is_contractor_relevant(processed):
+                                        processed_docs.append(processed)
+                                except Exception as doc_error:
+                                    logger.warning(f"Error processing GovInfo document: {doc_error}")
+                                    continue
+                            
+                            logger.info(f"Fetched {len(processed_docs)} contractor-relevant FR documents from GovInfo")
+                            return processed_docs
+                        else:
+                            logger.warning("No packages returned from GovInfo FR API")
+                            return self._get_mock_federal_register_docs()
+                            
+                    except json.JSONDecodeError as je:
+                        logger.error(f"GovInfo FR API returned invalid JSON: {je}")
+                        logger.debug(f"Response text: {response_text[:500]}")
+                        return self._get_mock_federal_register_docs()
+                        
+                elif response.status == 401:
+                    logger.error("GovInfo API authentication failed - check API key")
+                    return self._get_mock_federal_register_docs()
+                elif response.status == 403:
+                    logger.error("GovInfo API access forbidden - check API key permissions")
+                    return self._get_mock_federal_register_docs()
+                elif response.status == 500:
+                    logger.error("GovInfo API server error (500) - using mock data")
+                    return self._get_mock_federal_register_docs()
                 else:
                     logger.error(f"GovInfo Federal Register API error: {response.status}")
+                    logger.debug(f"Response text: {response_text[:200]}")
                     return self._get_mock_federal_register_docs()
                     
         except Exception as e:
