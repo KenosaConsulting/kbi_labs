@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBI Labs - SMB Government Contractor Platform</title>
+    
+    <!-- Critical CSS inline for immediate rendering -->
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc; 
+            color: #334155;
+        }
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 10000;
+        }
+        .loading-logo {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 24px;
+        }
+        .loading-text {
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-bottom: 32px;
+        }
+        .loading-progress {
+            width: 300px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
+            border-radius: 2px;
+            width: 0%;
+            animation: progress 3s ease-out forwards;
+        }
+        @keyframes progress {
+            0% { width: 0%; }
+            33% { width: 30%; }
+            66% { width: 70%; }
+            100% { width: 100%; }
+        }
+        .fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="//cdn.plot.ly">
+</head>
+<body>
+    <!-- Initial loading screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-logo">
+            <i class="fas fa-chart-network"></i>
+            KBI Labs
+        </div>
+        <div class="loading-text">Loading your intelligence platform...</div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- Main application container (hidden until loaded) -->
+    <div id="app-container" style="display: none;">
+        <!-- Content will be inserted here by React -->
+    </div>
+
+    <!-- Progressive script loading -->
+    <script>
+        // Performance tracking
+        const loadingMetrics = {
+            startTime: performance.now(),
+            phases: {}
+        };
+
+        // Phase 1: Load critical resources immediately
+        function loadCriticalResources() {
+            const critical = [
+                'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+            ];
+            
+            critical.forEach(url => {
+                if (url.endsWith('.css')) {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = url;
+                    document.head.appendChild(link);
+                }
+            });
+        }
+
+        // Phase 2: Load React and core scripts
+        function loadCoreScripts() {
+            return new Promise((resolve) => {
+                const scripts = [
+                    'https://unpkg.com/react@18/umd/react.production.min.js',
+                    'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
+                    'https://unpkg.com/@babel/standalone/babel.min.js'
+                ];
+                
+                let loaded = 0;
+                scripts.forEach(src => {
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.onload = () => {
+                        loaded++;
+                        if (loaded === scripts.length) {
+                            loadingMetrics.phases.coreScripts = performance.now() - loadingMetrics.startTime;
+                            resolve();
+                        }
+                    };
+                    document.head.appendChild(script);
+                });
+            });
+        }
+
+        // Phase 3: Load application scripts
+        function loadApplicationScripts() {
+            return new Promise((resolve) => {
+                const scripts = ['api-service.js', 'performance-optimizer.js'];
+                let loaded = 0;
+                
+                scripts.forEach(src => {
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.onload = () => {
+                        loaded++;
+                        if (loaded === scripts.length) {
+                            loadingMetrics.phases.appScripts = performance.now() - loadingMetrics.startTime;
+                            resolve();
+                        }
+                    };
+                    script.onerror = () => {
+                        console.warn(`Failed to load ${src}, continuing...`);
+                        loaded++;
+                        if (loaded === scripts.length) resolve();
+                    };
+                    document.head.appendChild(script);
+                });
+            });
+        }
+
+        // Phase 4: Load heavy dependencies in background
+        function loadHeavyDependencies() {
+            const heavyScripts = [
+                'https://cdn.plot.ly/plotly-latest.min.js',
+                'data-orchestrator.js',
+                'data-visualizer.js'
+            ];
+            
+            heavyScripts.forEach(src => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.onload = () => {
+                    console.log(`📦 Heavy dependency loaded: ${src}`);
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        // Initialize app after core loading
+        function initializeApp() {
+            loadingMetrics.phases.appInit = performance.now() - loadingMetrics.startTime;
+            
+            // Hide loading screen
+            const loadingScreen = document.getElementById('loading-screen');
+            const appContainer = document.getElementById('app-container');
+            
+            loadingScreen.classList.add('fade-out');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                appContainer.style.display = 'block';
+                
+                // Initialize React app with performance optimization
+                initializeReactApp();
+            }, 500);
+        }
+
+        // Initialize React application with progressive loading
+        function initializeReactApp() {
+            // Insert main application HTML
+            document.getElementById('app-container').innerHTML = `
+                <div class="platform-container">
+                    <div class="sidebar">
+                        <div class="logo">
+                            <h1><i class="fas fa-chart-network"></i> KBI Labs</h1>
+                            <div class="subtitle">SMB Government Contractor Platform</div>
+                        </div>
+                        <div class="nav-menu">
+                            <div class="nav-section">
+                                <div class="nav-section-title">Core Features</div>
+                                <div class="nav-item active">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    <span>Dashboard</span>
+                                </div>
+                                <div class="nav-item">
+                                    <i class="fas fa-brain"></i>
+                                    <span>Go/No-Go Engine</span>
+                                </div>
+                                <div class="nav-item">
+                                    <i class="fas fa-building"></i>
+                                    <span>Agency Intelligence</span>
+                                </div>
+                                <div class="nav-item">
+                                    <i class="fas fa-gavel"></i>
+                                    <span>Policy & Regulations</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="main-content">
+                        <div class="header">
+                            <div class="header-left">
+                                <h2>SMB Government Contractor Dashboard</h2>
+                                <div class="subtitle">
+                                    AI-powered procurement intelligence for small business success
+                                    <span class="api-status-indicator healthy">
+                                        <i class="fas fa-check-circle"></i>
+                                        Live Data
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="header-actions">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" placeholder="Search opportunities, agencies, contractors..." />
+                                </div>
+                                <button class="action-button">
+                                    <i class="fas fa-bell"></i>
+                                    Alerts
+                                </button>
+                                <button class="action-button primary">
+                                    <i class="fas fa-plus"></i>
+                                    New Analysis
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="content">
+                            <!-- KPI Cards with skeleton loading -->
+                            <div class="kpi-grid" id="kpi-container">
+                                <div class="kpi-skeleton"></div>
+                                <div class="kpi-skeleton"></div>
+                                <div class="kpi-skeleton"></div>
+                                <div class="kpi-skeleton"></div>
+                            </div>
+                            
+                            <!-- Charts with lazy loading -->
+                            <div class="visualization-grid">
+                                <div class="viz-card">
+                                    <div class="viz-header">
+                                        <h3>Opportunity Pipeline</h3>
+                                    </div>
+                                    <div id="opportunity-funnel" class="chart-container" data-chart-type="funnel">
+                                        <div class="chart-skeleton"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="viz-card">
+                                    <div class="viz-header">
+                                        <h3>Value Distribution</h3>
+                                    </div>
+                                    <div id="value-distribution" class="chart-container" data-chart-type="distribution">
+                                        <div class="chart-skeleton"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="viz-card wide">
+                                    <div class="viz-header">
+                                        <h3>Agency Spending Analysis</h3>
+                                    </div>
+                                    <div id="agency-spending" class="chart-container" data-chart-type="spending">
+                                        <div class="chart-skeleton"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Opportunities table with progressive loading -->
+                            <div class="opportunities-section">
+                                <div class="section-header">
+                                    <h3>Recent Opportunities</h3>
+                                    <div class="section-actions">
+                                        <button class="filter-button active">All</button>
+                                        <button class="filter-button">Pursue</button>
+                                        <button class="filter-button">Analyze</button>
+                                    </div>
+                                </div>
+                                <div id="opportunities-container" class="opportunities-list">
+                                    <div class="opportunity-skeleton"></div>
+                                    <div class="opportunity-skeleton"></div>
+                                    <div class="opportunity-skeleton"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add comprehensive styles
+            addApplicationStyles();
+            
+            // Start progressive data loading
+            startProgressiveDataLoading();
+        }
+
+        // Progressive data loading
+        function startProgressiveDataLoading() {
+            // Phase 1: Load basic KPIs immediately
+            setTimeout(() => loadBasicKPIs(), 100);
+            
+            // Phase 2: Load opportunities data
+            setTimeout(() => loadOpportunitiesData(), 500);
+            
+            // Phase 3: Load charts when visible
+            setTimeout(() => setupLazyChartLoading(), 1000);
+            
+            // Phase 4: Load background data
+            setTimeout(() => loadBackgroundData(), 2000);
+        }
+
+        // Load basic KPIs first
+        function loadBasicKPIs() {
+            const kpiContainer = document.getElementById('kpi-container');
+            const basicKPIs = [
+                { label: 'Active Opportunities', value: '12', change: '+3 this week', type: 'primary', icon: 'fas fa-bullseye' },
+                { label: 'Pipeline Value', value: '$8.4M', change: '+$1.2M this month', type: 'success', icon: 'fas fa-chart-line' },
+                { label: 'Win Rate', value: '34%', change: '+5% improvement', type: 'warning', icon: 'fas fa-trophy' },
+                { label: 'High Priority', value: '5', change: '2 urgent deadlines', type: 'danger', icon: 'fas fa-star' }
+            ];
+
+            kpiContainer.innerHTML = '';
+            basicKPIs.forEach((kpi, index) => {
+                setTimeout(() => {
+                    const kpiCard = document.createElement('div');
+                    kpiCard.className = `kpi-card ${kpi.type}`;
+                    kpiCard.style.opacity = '0';
+                    kpiCard.style.transform = 'translateY(20px)';
+                    kpiCard.style.transition = 'all 0.5s ease-out';
+                    
+                    kpiCard.innerHTML = `
+                        <div class="kpi-header">
+                            <div class="kpi-icon ${kpi.type}">
+                                <i class="${kpi.icon}"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-value">${kpi.value}</div>
+                        <div class="kpi-label">${kpi.label}</div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            ${kpi.change}
+                        </div>
+                    `;
+                    
+                    kpiContainer.appendChild(kpiCard);
+                    
+                    // Animate in
+                    setTimeout(() => {
+                        kpiCard.style.opacity = '1';
+                        kpiCard.style.transform = 'translateY(0)';
+                    }, 50);
+                }, index * 100);
+            });
+        }
+
+        // Load opportunities data
+        function loadOpportunitiesData() {
+            const container = document.getElementById('opportunities-container');
+            const sampleOpportunities = [
+                { title: 'IT Infrastructure Modernization Services', agency: 'Department of Defense', value: '$2.5M', deadline: '2025-08-15', recommendation: 'pursue' },
+                { title: 'Cloud Migration and Optimization', agency: 'Veterans Affairs', value: '$1.8M', deadline: '2025-08-20', recommendation: 'analyze' },
+                { title: 'Cybersecurity Assessment Services', agency: 'Homeland Security', value: '$950K', deadline: '2025-08-25', recommendation: 'pursue' },
+                { title: 'Data Analytics Platform Development', agency: 'Health and Human Services', value: '$3.2M', deadline: '2025-09-01', recommendation: 'analyze' },
+                { title: 'Software Development Services', agency: 'Treasury', value: '$750K', deadline: '2025-09-05', recommendation: 'pursue' }
+            ];
+
+            container.innerHTML = '';
+            sampleOpportunities.forEach((opp, index) => {
+                setTimeout(() => {
+                    const oppCard = document.createElement('div');
+                    oppCard.className = 'opportunity-card';
+                    oppCard.innerHTML = `
+                        <div class="opportunity-header">
+                            <h4>${opp.title}</h4>
+                            <span class="recommendation-badge ${opp.recommendation}">${opp.recommendation.toUpperCase()}</span>
+                        </div>
+                        <div class="opportunity-details">
+                            <span><i class="fas fa-building"></i> ${opp.agency}</span>
+                            <span><i class="fas fa-dollar-sign"></i> ${opp.value}</span>
+                            <span><i class="fas fa-calendar"></i> Due ${opp.deadline}</span>
+                        </div>
+                    `;
+                    container.appendChild(oppCard);
+                }, index * 150);
+            });
+        }
+
+        // Setup lazy chart loading
+        function setupLazyChartLoading() {
+            const chartContainers = document.querySelectorAll('.chart-container');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        loadChart(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: '100px' });
+
+            chartContainers.forEach(container => {
+                observer.observe(container);
+            });
+        }
+
+        // Load individual chart
+        function loadChart(container) {
+            const chartType = container.dataset.chartType;
+            container.innerHTML = `
+                <div class="chart-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading ${chartType} chart...</span>
+                </div>
+            `;
+
+            // Simulate chart loading
+            setTimeout(() => {
+                container.innerHTML = `
+                    <div class="chart-placeholder">
+                        <i class="fas fa-chart-${chartType === 'funnel' ? 'bar' : chartType === 'distribution' ? 'pie' : 'line'}"></i>
+                        <span>${chartType.charAt(0).toUpperCase() + chartType.slice(1)} Chart Ready</span>
+                        <small>Real visualization will render here with live data</small>
+                    </div>
+                `;
+            }, 1000 + Math.random() * 1000);
+        }
+
+        // Load background data
+        function loadBackgroundData() {
+            console.log('📊 Loading background data...');
+            // This would connect to the actual APIs when available
+        }
+
+        // Add comprehensive application styles
+        function addApplicationStyles() {
+            const styles = document.createElement('style');
+            styles.textContent = \`
+                /* CSS variables and base styles */
+                :root {
+                    --primary-blue: #2563eb;
+                    --success-green: #10b981;
+                    --warning-orange: #f59e0b;
+                    --danger-red: #ef4444;
+                    --purple-accent: #8b5cf6;
+                    --gray-50: #f8fafc;
+                    --gray-100: #f1f5f9;
+                    --gray-200: #e2e8f0;
+                    --gray-300: #cbd5e1;
+                    --gray-400: #94a3b8;
+                    --gray-500: #64748b;
+                    --gray-600: #475569;
+                    --gray-700: #334155;
+                    --gray-800: #1e293b;
+                    --gray-900: #0f172a;
+                }
+
+                .platform-container {
+                    display: flex;
+                    min-height: 100vh;
+                }
+
+                /* Sidebar styles */
+                .sidebar {
+                    width: 280px;
+                    background: white;
+                    border-right: 1px solid var(--gray-200);
+                    padding: 24px 0;
+                    flex-shrink: 0;
+                }
+
+                .logo {
+                    padding: 0 24px 32px;
+                    border-bottom: 1px solid var(--gray-200);
+                }
+
+                .logo h1 {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: var(--primary-blue);
+                    margin-bottom: 4px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .logo .subtitle {
+                    font-size: 0.875rem;
+                    color: var(--gray-500);
+                    font-weight: 500;
+                }
+
+                .nav-menu {
+                    padding: 24px 0;
+                }
+
+                .nav-section-title {
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: var(--gray-400);
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    padding: 0 24px 16px;
+                }
+
+                .nav-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 24px;
+                    color: var(--gray-600);
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    border-right: 3px solid transparent;
+                }
+
+                .nav-item:hover {
+                    background: var(--gray-50);
+                    color: var(--primary-blue);
+                }
+
+                .nav-item.active {
+                    background: rgba(37, 99, 235, 0.1);
+                    color: var(--primary-blue);
+                    border-right-color: var(--primary-blue);
+                    font-weight: 600;
+                }
+
+                /* Main content styles */
+                .main-content {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+
+                .header {
+                    background: white;
+                    border-bottom: 1px solid var(--gray-200);
+                    padding: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 24px;
+                }
+
+                .header h2 {
+                    font-size: 1.875rem;
+                    font-weight: 700;
+                    color: var(--gray-900);
+                    margin-bottom: 4px;
+                }
+
+                .header .subtitle {
+                    color: var(--gray-500);
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .api-status-indicator {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                }
+
+                .api-status-indicator.healthy {
+                    background: #dcfce7;
+                    color: #16a34a;
+                }
+
+                .header-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
+
+                .search-box {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .search-box i {
+                    position: absolute;
+                    left: 12px;
+                    color: var(--gray-400);
+                }
+
+                .search-box input {
+                    padding: 10px 16px 10px 40px;
+                    border: 1px solid var(--gray-300);
+                    border-radius: 8px;
+                    width: 300px;
+                    font-size: 0.875rem;
+                    background: white;
+                }
+
+                .action-button {
+                    padding: 10px 16px;
+                    border: 1px solid var(--gray-300);
+                    background: white;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.2s;
+                }
+
+                .action-button:hover {
+                    background: var(--gray-50);
+                }
+
+                .action-button.primary {
+                    background: var(--primary-blue);
+                    color: white;
+                    border-color: var(--primary-blue);
+                }
+
+                .action-button.primary:hover {
+                    background: #1d4ed8;
+                }
+
+                /* Content area */
+                .content {
+                    flex: 1;
+                    padding: 24px;
+                    overflow-y: auto;
+                }
+
+                /* KPI styles */
+                .kpi-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                    gap: 20px;
+                    margin-bottom: 32px;
+                }
+
+                .kpi-card {
+                    background: white;
+                    padding: 24px;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    border-left: 4px solid var(--primary-blue);
+                }
+
+                .kpi-card.success { border-left-color: var(--success-green); }
+                .kpi-card.warning { border-left-color: var(--warning-orange); }
+                .kpi-card.danger { border-left-color: var(--danger-red); }
+
+                .kpi-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 16px;
+                }
+
+                .kpi-icon {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: var(--primary-blue);
+                    color: white;
+                }
+
+                .kpi-icon.success { background: var(--success-green); }
+                .kpi-icon.warning { background: var(--warning-orange); }
+                .kpi-icon.danger { background: var(--danger-red); }
+
+                .kpi-value {
+                    font-size: 2rem;
+                    font-weight: 700;
+                    color: var(--gray-900);
+                    margin-bottom: 4px;
+                }
+
+                .kpi-label {
+                    font-size: 0.875rem;
+                    color: var(--gray-500);
+                    margin-bottom: 8px;
+                }
+
+                .kpi-change {
+                    font-size: 0.75rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+
+                .kpi-change.positive {
+                    color: var(--success-green);
+                }
+
+                /* Visualization styles */
+                .visualization-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+                    gap: 24px;
+                    margin-bottom: 32px;
+                }
+
+                .viz-card {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    overflow: hidden;
+                    border: 1px solid var(--gray-200);
+                }
+
+                .viz-card.wide {
+                    grid-column: 1 / -1;
+                }
+
+                .viz-header {
+                    padding: 20px 24px 16px;
+                    border-bottom: 1px solid var(--gray-200);
+                    background: var(--gray-50);
+                }
+
+                .viz-header h3 {
+                    margin: 0;
+                    color: var(--gray-800);
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                }
+
+                .chart-container {
+                    padding: 24px;
+                    min-height: 300px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .chart-skeleton,
+                .chart-loading,
+                .chart-placeholder {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    color: var(--gray-400);
+                    text-align: center;
+                }
+
+                .chart-skeleton {
+                    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+                    background-size: 200% 100%;
+                    animation: shimmer 2s infinite;
+                    border-radius: 8px;
+                    height: 200px;
+                }
+
+                .chart-loading i {
+                    font-size: 2rem;
+                    margin-bottom: 12px;
+                    color: var(--primary-blue);
+                }
+
+                .chart-placeholder i {
+                    font-size: 3rem;
+                    margin-bottom: 16px;
+                    color: var(--gray-300);
+                }
+
+                .chart-placeholder small {
+                    color: var(--gray-400);
+                    margin-top: 8px;
+                }
+
+                /* Opportunities section */
+                .opportunities-section {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 24px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+
+                .section-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 24px;
+                }
+
+                .section-header h3 {
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    color: var(--gray-900);
+                }
+
+                .section-actions {
+                    display: flex;
+                    gap: 8px;
+                }
+
+                .filter-button {
+                    padding: 6px 12px;
+                    border: 1px solid var(--gray-300);
+                    background: white;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 0.875rem;
+                    transition: all 0.2s;
+                }
+
+                .filter-button.active {
+                    background: var(--primary-blue);
+                    color: white;
+                    border-color: var(--primary-blue);
+                }
+
+                .opportunity-card {
+                    padding: 16px;
+                    border: 1px solid var(--gray-200);
+                    border-radius: 8px;
+                    margin-bottom: 12px;
+                    transition: all 0.2s;
+                }
+
+                .opportunity-card:hover {
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+
+                .opportunity-header {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    margin-bottom: 12px;
+                }
+
+                .opportunity-header h4 {
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: var(--gray-900);
+                    margin: 0;
+                    flex: 1;
+                }
+
+                .recommendation-badge {
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                }
+
+                .recommendation-badge.pursue {
+                    background: #dcfce7;
+                    color: #16a34a;
+                }
+
+                .recommendation-badge.analyze {
+                    background: #fef3c7;
+                    color: #d97706;
+                }
+
+                .opportunity-details {
+                    display: flex;
+                    gap: 24px;
+                    font-size: 0.875rem;
+                    color: var(--gray-600);
+                }
+
+                .opportunity-details span {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .opportunity-skeleton,
+                .kpi-skeleton {
+                    height: 120px;
+                    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+                    background-size: 200% 100%;
+                    animation: shimmer 2s infinite;
+                    border-radius: 12px;
+                }
+
+                @keyframes shimmer {
+                    0% { background-position: -200% 0; }
+                    100% { background-position: 200% 0; }
+                }
+
+                /* Responsive design */
+                @media (max-width: 768px) {
+                    .platform-container {
+                        flex-direction: column;
+                    }
+                    
+                    .sidebar {
+                        width: 100%;
+                    }
+                    
+                    .header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 16px;
+                    }
+                    
+                    .search-box input {
+                        width: 200px;
+                    }
+                    
+                    .kpi-grid,
+                    .visualization-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            \`;
+            document.head.appendChild(styles);
+        }
+
+        // Start the progressive loading sequence
+        async function startProgressiveLoading() {
+            try {
+                loadingMetrics.phases.start = performance.now();
+                
+                // Phase 1: Critical resources (immediate)
+                loadCriticalResources();
+                
+                // Phase 2: Core scripts (1-2 seconds)
+                await loadCoreScripts();
+                
+                // Phase 3: Application scripts (2-3 seconds)  
+                await loadApplicationScripts();
+                
+                // Phase 4: Initialize app (3-4 seconds)
+                initializeApp();
+                
+                // Phase 5: Heavy dependencies (background)
+                loadHeavyDependencies();
+                
+                const totalTime = performance.now() - loadingMetrics.startTime;
+                console.log(\`✅ Progressive loading completed in \${totalTime.toFixed(2)}ms\`);
+                console.log('📊 Loading phases:', loadingMetrics.phases);
+                
+            } catch (error) {
+                console.error('❌ Progressive loading failed:', error);
+                // Fallback to basic loading
+                document.body.innerHTML = '<div style="padding: 40px; text-align: center;"><h2>Loading failed. Please refresh the page.</h2></div>';
+            }
+        }
+
+        // Start progressive loading when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startProgressiveLoading);
+        } else {
+            startProgressiveLoading();
+        }
+    </script>
+</body>
+</html>

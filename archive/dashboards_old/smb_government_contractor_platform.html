@@ -10,6 +10,8 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="api-service.js"></script>
     <script src="realtime-updater.js"></script>
+    <script src="data-orchestrator.js"></script>
+    <script src="data-visualizer.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -259,6 +261,45 @@
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
             margin-bottom: 32px;
+        }
+
+        .visualization-grid {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .viz-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+        }
+
+        .viz-card.wide {
+            grid-column: 1 / -1;
+        }
+
+        .viz-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        .viz-header h3 {
+            margin: 0;
+            color: var(--gray-800);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            padding: 24px;
+            min-height: 300px;
+            position: relative;
         }
         
         .kpi-card {
@@ -842,36 +883,96 @@
             const [dashboardData, setDashboardData] = useState(null);
             const [error, setError] = useState(null);
 
-            // Load real data on component mount and setup real-time updates
+            // Load real data using the orchestrator
             useEffect(() => {
-                loadDashboardData();
-                
-                // Setup real-time updates
-                if (window.realtimeUpdater) {
-                    // Subscribe to opportunities updates
-                    window.realtimeUpdater.subscribe('opportunities', (data) => {
-                        if (data?.data) {
-                            const processedOpportunities = processOpportunityData(data.data);
-                            setOpportunities(processedOpportunities);
-                        }
-                    });
+                // Wait for orchestrator to be ready
+                const initializeData = async () => {
+                    if (window.dataOrchestrator) {
+                        try {
+                            // Ensure orchestrator is initialized
+                            if (!window.dataOrchestrator.isInitialized) {
+                                await window.dataOrchestrator.initialize();
+                            }
 
-                    // Subscribe to dashboard updates
-                    window.realtimeUpdater.subscribe('dashboard', (data) => {
-                        if (data?.data) {
-                            setDashboardData(data.data);
+                            // Subscribe to SMB dashboard updates
+                            window.dataOrchestrator.subscribe('smbDashboard', (update) => {
+                                handleOrchestratorUpdate(update);
+                            });
+
+                            // Load initial data
+                            loadOrchestratedData();
+                            
+                        } catch (error) {
+                            console.error('Failed to initialize orchestrator:', error);
+                            // Fallback to direct API calls
+                            loadDashboardData();
                         }
-                    });
-                }
+                    } else {
+                        // Fallback if orchestrator not available
+                        loadDashboardData();
+                    }
+                };
+
+                // Initialize with delay to ensure scripts are loaded
+                setTimeout(initializeData, 500);
 
                 // Cleanup function
                 return () => {
-                    if (window.realtimeUpdater) {
-                        window.realtimeUpdater.unsubscribe('opportunities');
-                        window.realtimeUpdater.unsubscribe('dashboard');
+                    if (window.dataOrchestrator) {
+                        window.dataOrchestrator.unsubscribe('smbDashboard');
                     }
                 };
             }, []);
+
+            // Handle orchestrator data updates
+            const handleOrchestratorUpdate = (update) => {
+                console.log('📊 Received orchestrator update:', update.dataType);
+                
+                if (update.dataType === 'opportunities' && update.data) {
+                    setOpportunities(update.data);
+                }
+                
+                if (update.dataType === 'comprehensive' && update.data) {
+                    setDashboardData(update.data);
+                }
+
+                if (update.dataType === 'system' && update.data?.status === 'initialized') {
+                    setLoading(false);
+                    setError(null);
+                }
+            };
+
+            // Load data from orchestrator
+            const loadOrchestratedData = () => {
+                if (!window.dataOrchestrator) return;
+
+                try {
+                    // Get processed opportunities for SMB dashboard
+                    const opportunitiesData = window.dataOrchestrator.getProcessedData('smbDashboard', 'opportunities');
+                    if (opportunitiesData && Array.isArray(opportunitiesData)) {
+                        setOpportunities(opportunitiesData);
+                    }
+
+                    // Get comprehensive dashboard data
+                    const comprehensiveData = window.dataOrchestrator.getData('comprehensive');
+                    if (comprehensiveData?.data) {
+                        setDashboardData(comprehensiveData.data);
+                    }
+
+                    // Check orchestrator status
+                    const status = window.dataOrchestrator.getStatus();
+                    if (status.healthyDataSources > 0) {
+                        setLoading(false);
+                        setError(null);
+                    }
+                    
+                    console.log('📈 Orchestrator status:', status);
+                    
+                } catch (error) {
+                    console.error('Error loading orchestrated data:', error);
+                    setError(error.message);
+                }
+            };
 
             const loadDashboardData = async () => {
                 try {
@@ -999,6 +1100,41 @@
                     }
                 ];
             }, [opportunities, dashboardData]);
+
+            // Update visualizations when data changes
+            useEffect(() => {
+                if (opportunities.length > 0 && window.dataVisualizer) {
+                    // Create animated KPIs
+                    const kpiData = kpis.map(kpi => ({
+                        ...kpi,
+                        rawValue: extractNumericValue(kpi.value)
+                    }));
+                    
+                    window.dataVisualizer.createAnimatedKPIs('#animated-kpis', kpiData);
+
+                    // Create pipeline funnel
+                    const funnelData = {
+                        totalOpportunities: opportunities.length,
+                        analyzeOpportunities: opportunities.filter(o => o.recommendation === 'analyze').length,
+                        pursueOpportunities: opportunities.filter(o => o.recommendation === 'pursue').length
+                    };
+                    window.dataVisualizer.createOpportunityFunnel('opportunity-funnel', funnelData);
+
+                    // Create value distribution chart
+                    window.dataVisualizer.createValueDistributionChart('value-distribution', opportunities);
+
+                    // Create agency spending chart (use mock data if no real agency data available)
+                    const agencyData = mockAgencies.slice(0, 8);
+                    window.dataVisualizer.createAgencySpendingChart('agency-spending', agencyData);
+                }
+            }, [kpis, opportunities]);
+
+            // Extract numeric value from formatted strings
+            const extractNumericValue = (value) => {
+                if (typeof value === 'number') return value;
+                const numStr = value.replace(/[^\d]/g, '');
+                return parseInt(numStr) || 0;
+            };
 
             const getScoreClass = (score) => {
                 if (score >= 80) return 'high';
@@ -1227,23 +1363,33 @@
                         <div className="content">
                             {activeView === 'dashboard' && (
                                 <>
-                                    {/* KPI Cards */}
-                                    <div className="kpi-grid">
-                                        {kpis.map((kpi, index) => (
-                                            <div key={index} className={`kpi-card ${kpi.type}`}>
-                                                <div className="kpi-header">
-                                                    <div className={`kpi-icon ${kpi.type}`}>
-                                                        <i className={kpi.icon}></i>
-                                                    </div>
-                                                </div>
-                                                <div className="kpi-value">{kpi.value}</div>
-                                                <div className="kpi-label">{kpi.label}</div>
-                                                <div className={`kpi-change ${kpi.changeType}`}>
-                                                    <i className={kpi.changeType === 'positive' ? 'fas fa-arrow-up' : 'fas fa-arrow-down'}></i>
-                                                    {kpi.change}
-                                                </div>
+                                    {/* Animated KPI Cards */}
+                                    <div className="kpi-grid" id="animated-kpis">
+                                        {/* KPIs will be rendered by data visualizer */}
+                                    </div>
+
+                                    {/* Data Visualization Section */}
+                                    <div className="visualization-grid">
+                                        <div className="viz-card">
+                                            <div className="viz-header">
+                                                <h3>Opportunity Pipeline</h3>
                                             </div>
-                                        ))}
+                                            <div id="opportunity-funnel" className="chart-container"></div>
+                                        </div>
+                                        
+                                        <div className="viz-card">
+                                            <div className="viz-header">
+                                                <h3>Value Distribution</h3>
+                                            </div>
+                                            <div id="value-distribution" className="chart-container"></div>
+                                        </div>
+                                        
+                                        <div className="viz-card wide">
+                                            <div className="viz-header">
+                                                <h3>Agency Spending Analysis</h3>
+                                            </div>
+                                            <div id="agency-spending" className="chart-container"></div>
+                                        </div>
                                     </div>
 
                                     <div className="dashboard-grid">
@@ -1260,19 +1406,19 @@
                                                         className={`filter-button ${filterType === 'all' ? 'active' : ''}`}
                                                         onClick={() => setFilterType('all')}
                                                     >
-                                                        All ({mockOpportunities.length})
+                                                        All ({opportunities.length})
                                                     </button>
                                                     <button 
                                                         className={`filter-button ${filterType === 'pursue' ? 'active' : ''}`}
                                                         onClick={() => setFilterType('pursue')}
                                                     >
-                                                        Pursue ({mockOpportunities.filter(o => o.recommendation === 'pursue').length})
+                                                        Pursue ({opportunities.filter(o => o.recommendation === 'pursue').length})
                                                     </button>
                                                     <button 
                                                         className={`filter-button ${filterType === 'analyze' ? 'active' : ''}`}
                                                         onClick={() => setFilterType('analyze')}
                                                     >
-                                                        Analyze ({mockOpportunities.filter(o => o.recommendation === 'analyze').length})
+                                                        Analyze ({opportunities.filter(o => o.recommendation === 'analyze').length})
                                                     </button>
                                                     <button 
                                                         className={`filter-button ${filterType === 'pass' ? 'active' : ''}`}
