@@ -31,6 +31,18 @@ except ImportError:
         FPDS_AVAILABLE = False
         print("Warning: FPDS client not available")
 
+# Import GSA client
+try:
+    from .gsa_client import GSAClient, GSAResponse, get_gsa_analytics_data, get_gsa_operational_data
+    GSA_AVAILABLE = True
+except ImportError:
+    try:
+        from gsa_client import GSAClient, GSAResponse, get_gsa_analytics_data, get_gsa_operational_data
+        GSA_AVAILABLE = True
+    except ImportError:
+        GSA_AVAILABLE = False
+        print("Warning: GSA client not available")
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -596,32 +608,75 @@ class EnhancedGovernmentAPIClient:
     
     async def get_government_analytics_data(self, data_type: str = "agencies") -> APIResponse:
         """
-        Get government analytics and operational data 
-        Uses multiple fallback sources when GSA API is unavailable
+        Get government analytics and operational data from GSA APIs
+        Real government analytics with fallback to alternative sources
         """
         start_time = time.time()
         
+        if GSA_AVAILABLE and 'GSA_API_KEY' in self.api_keys:
+            try:
+                # Use real GSA APIs
+                async with GSAClient(self.api_keys['GSA_API_KEY']) as gsa_client:
+                    
+                    if data_type == "agencies":
+                        # Get digital analytics by agency
+                        gsa_result = await gsa_client.get_digital_analytics(report_type="agencies")
+                    elif data_type == "sites":
+                        # Get site scanning data
+                        gsa_result = await gsa_client.get_site_scanning_data(limit=20)
+                    elif data_type == "contracts":
+                        # Get GSA Schedules data
+                        gsa_result = await gsa_client.get_schedules_data(limit=15)
+                    elif data_type == "auctions":
+                        # Get government auctions
+                        gsa_result = await gsa_client.get_government_auctions(limit=10)
+                    elif data_type == "rates":
+                        # Get CALC labor rates
+                        gsa_result = await gsa_client.get_calc_data(limit=15)
+                    else:
+                        # Default to digital analytics
+                        gsa_result = await gsa_client.get_digital_analytics(report_type="agencies")
+                    
+                    if gsa_result.success:
+                        # Convert GSA response to our standard format
+                        return APIResponse(
+                            success=True,
+                            data=gsa_result.data,
+                            source="gsa",
+                            count=gsa_result.count,
+                            response_time_ms=gsa_result.response_time_ms
+                        )
+                    else:
+                        logger.warning(f"GSA API failed: {gsa_result.error}")
+                        # Fall back to alternative sources
+                        return await self._get_fallback_analytics_data(data_type, start_time)
+                        
+            except Exception as e:
+                logger.error(f"GSA API error: {e}")
+                return await self._get_fallback_analytics_data(data_type, start_time)
+        else:
+            # GSA not available, use fallback sources
+            logger.info("GSA API not available, using fallback sources")
+            return await self._get_fallback_analytics_data(data_type, start_time)
+    
+    async def _get_fallback_analytics_data(self, data_type: str, start_time: float) -> APIResponse:
+        """Fallback analytics data when GSA APIs are unavailable"""
         try:
-            # Primary: Try alternative government data sources
             if data_type == "agencies":
-                # Use Federal Register to get agency information
                 return await self._get_agency_data_from_federal_register()
             elif data_type == "contracts":
-                # Use SAM.gov for contract data (when not rate limited)
                 return await self._get_contract_data_fallback()
             elif data_type == "spending":
-                # Use Census for economic indicators
                 return await self._get_spending_indicators()
             else:
-                # Default: Federal Register agency data
                 return await self._get_agency_data_from_federal_register()
-                
         except Exception as e:
-            logger.error(f"Government analytics error: {e}")
+            logger.error(f"Fallback analytics error: {e}")
             return APIResponse(
                 success=False,
                 error=str(e),
-                source="government_analytics"
+                source="government_analytics",
+                response_time_ms=(time.time() - start_time) * 1000
             )
     
     async def _get_agency_data_from_federal_register(self) -> APIResponse:
@@ -1018,7 +1073,10 @@ class EnhancedGovernmentAPIClient:
             'regulatory_docs': self.search_regulations_gov(query),
             'federal_awards': self.search_usaspending_awards(query, 10),  # Real spending data
             'agency_spending': self.get_agency_spending_data(),  # Budget execution data
-            'fpds_contracts': self.search_fpds_contracts(vendor_name=query, limit=10)  # NEW: FPDS contract data
+            'fpds_contracts': self.search_fpds_contracts(vendor_name=query, limit=10),  # FPDS contract data
+            'gsa_analytics': self.get_gsa_digital_analytics("agencies"),  # NEW: GSA digital analytics
+            'gsa_sites': self.get_gsa_operational_data("sites"),  # NEW: GSA site scanning
+            'gsa_search': self.get_gsa_operational_data("search")  # NEW: GSA search suggestions
         }
         
         results = {}
@@ -1387,6 +1445,104 @@ class EnhancedGovernmentAPIClient:
                 success=False,
                 error=str(e),
                 source="contract_intelligence",
+                response_time_ms=(time.time() - start_time) * 1000
+            )
+    
+    async def get_gsa_digital_analytics(self, report_type: str = "agencies") -> APIResponse:
+        """
+        Get GSA Digital Analytics Program (DAP) data
+        Real government website analytics and performance metrics
+        """
+        start_time = time.time()
+        
+        if not GSA_AVAILABLE:
+            return APIResponse(
+                success=False,
+                error="GSA client not available",
+                source="gsa"
+            )
+        
+        if 'GSA_API_KEY' not in self.api_keys:
+            return APIResponse(
+                success=False,
+                error="GSA API key not provided",
+                source="gsa"
+            )
+        
+        try:
+            async with GSAClient(self.api_keys['GSA_API_KEY']) as gsa_client:
+                result = await gsa_client.get_digital_analytics(report_type=report_type)
+                
+                return APIResponse(
+                    success=result.success,
+                    data=result.data,
+                    source="gsa",
+                    count=result.count,
+                    response_time_ms=result.response_time_ms,
+                    error=result.error if not result.success else None
+                )
+                
+        except Exception as e:
+            logger.error(f"GSA Digital Analytics error: {e}")
+            return APIResponse(
+                success=False,
+                error=str(e),
+                source="gsa",
+                response_time_ms=(time.time() - start_time) * 1000
+            )
+    
+    async def get_gsa_operational_data(self, data_type: str = "sites") -> APIResponse:
+        """
+        Get GSA operational data (sites, auctions, rates, etc.)
+        Real government operational intelligence
+        """
+        start_time = time.time()
+        
+        if not GSA_AVAILABLE:
+            return APIResponse(
+                success=False,
+                error="GSA client not available",
+                source="gsa"
+            )
+        
+        if 'GSA_API_KEY' not in self.api_keys:
+            return APIResponse(
+                success=False,
+                error="GSA API key not provided",
+                source="gsa"
+            )
+        
+        try:
+            async with GSAClient(self.api_keys['GSA_API_KEY']) as gsa_client:
+                
+                if data_type == "sites":
+                    result = await gsa_client.get_site_scanning_data(limit=20)
+                elif data_type == "auctions":
+                    result = await gsa_client.get_government_auctions(limit=15)
+                elif data_type == "rates":
+                    result = await gsa_client.get_calc_data(limit=15)
+                elif data_type == "schedules":
+                    result = await gsa_client.get_schedules_data(limit=15)
+                elif data_type == "per_diem":
+                    result = await gsa_client.get_per_diem_rates()
+                else:
+                    result = await gsa_client.get_site_scanning_data(limit=20)
+                
+                return APIResponse(
+                    success=result.success,
+                    data=result.data,
+                    source="gsa",
+                    count=result.count,
+                    response_time_ms=result.response_time_ms,
+                    error=result.error if not result.success else None
+                )
+                
+        except Exception as e:
+            logger.error(f"GSA Operational Data error: {e}")
+            return APIResponse(
+                success=False,
+                error=str(e),
+                source="gsa",
                 response_time_ms=(time.time() - start_time) * 1000
             )
 
