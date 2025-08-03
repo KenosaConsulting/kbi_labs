@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBI Labs - Agency Intelligence & Market Analysis</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --success-green: #10b981;
+            --warning-orange: #f59e0b;
+            --danger-red: #ef4444;
+            --purple-accent: #8b5cf6;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .intelligence-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-left .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .control-select {
+            padding: 10px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.875rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-select option {
+            background: var(--gray-800);
+            color: white;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-button {
+            padding: 8px 16px;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            background: white;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-button.active {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+
+        .section-content {
+            padding: 24px;
+        }
+
+        /* Agency Profiles */
+        .agencies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .agency-card {
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .agency-card:hover {
+            border-color: var(--primary-blue);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .agency-card.selected {
+            border-color: var(--primary-blue);
+            background: linear-gradient(to right, rgba(37, 99, 235, 0.05), transparent);
+        }
+
+        .agency-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .agency-info {
+            flex: 1;
+        }
+
+        .agency-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .agency-type {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .agency-spending {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--success-green);
+        }
+
+        .agency-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        .metric-label {
+            color: var(--gray-600);
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .opportunity-indicators {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .indicator {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .indicator.high {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+        }
+
+        .indicator.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-orange);
+        }
+
+        .indicator.low {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-red);
+        }
+
+        /* Market Analysis Charts */
+        .chart-container {
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .chart-card {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Competitive Landscape */
+        .competitor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .competitor-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            background: var(--gray-50);
+        }
+
+        .competitor-rank {
+            width: 32px;
+            height: 32px;
+            border-radius: 16px;
+            background: var(--primary-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 16px;
+        }
+
+        .competitor-info {
+            flex: 1;
+        }
+
+        .competitor-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .competitor-details {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .competitor-stats {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .competitor-stat {
+            text-align: center;
+        }
+
+        .competitor-stat-value {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+        }
+
+        .competitor-stat-label {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        /* Sidebar Panels */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .panel-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-200);
+            font-weight: 600;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel-content {
+            padding: 20px;
+        }
+
+        /* Market Trends */
+        .trend-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .trend-item:last-child {
+            border-bottom: none;
+        }
+
+        .trend-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            font-size: 16px;
+            color: white;
+        }
+
+        .trend-icon.up { background: var(--success-green); }
+        .trend-icon.down { background: var(--danger-red); }
+        .trend-icon.stable { background: var(--gray-400); }
+
+        .trend-content {
+            flex: 1;
+        }
+
+        .trend-title {
+            font-weight: 500;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+            margin-bottom: 4px;
+        }
+
+        .trend-desc {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+
+        .trend-change {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .trend-change.positive { color: var(--success-green); }
+        .trend-change.negative { color: var(--danger-red); }
+
+        /* Smart Insights */
+        .insight-item {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(168, 85, 247, 0.05));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--purple-accent);
+            font-size: 0.875rem;
+        }
+
+        .insight-content {
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .agencies-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .intelligence-container {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 24px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .header-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .agencies-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .agency-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .competitor-stats {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--gray-500);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gray-300);
+            border-top: 2px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // Mock data for agencies
+        const mockAgencies = [
+            {
+                id: 1,
+                name: "Department of Defense",
+                type: "Defense",
+                totalSpending: "$45.2B",
+                avgContractSize: "$2.1M",
+                sbParticipation: "28%",
+                competitionRate: "67%",
+                timeToAward: "145 days",
+                activeOpportunities: 847,
+                opportunityLevel: "high",
+                selected: false
+            },
+            {
+                id: 2,
+                name: "Department of Veterans Affairs",
+                type: "Healthcare",
+                totalSpending: "$12.8B",
+                avgContractSize: "$1.4M",
+                sbParticipation: "35%",
+                competitionRate: "72%",
+                timeToAward: "98 days",
+                activeOpportunities: 234,
+                opportunityLevel: "high",
+                selected: false
+            },
+            {
+                id: 3,
+                name: "General Services Administration",
+                type: "Support Services",
+                totalSpending: "$8.9B",
+                avgContractSize: "$950K",
+                sbParticipation: "42%",
+                competitionRate: "78%",
+                timeToAward: "67 days",
+                activeOpportunities: 456,
+                opportunityLevel: "medium",
+                selected: false
+            },
+            {
+                id: 4,
+                name: "Department of Health and Human Services",
+                type: "Healthcare",
+                totalSpending: "$15.3B",
+                avgContractSize: "$1.8M",
+                sbParticipation: "31%",
+                competitionRate: "69%",
+                timeToAward: "112 days",
+                activeOpportunities: 189,
+                opportunityLevel: "high",
+                selected: false
+            },
+            {
+                id: 5,
+                name: "Department of Homeland Security",
+                type: "Security",
+                totalSpending: "$7.4B",
+                avgContractSize: "$1.2M",
+                sbParticipation: "29%",
+                competitionRate: "74%",
+                timeToAward: "89 days",
+                activeOpportunities: 312,
+                opportunityLevel: "medium",
+                selected: false
+            },
+            {
+                id: 6,
+                name: "Department of Energy",
+                type: "Energy",
+                totalSpending: "$4.1B",
+                avgContractSize: "$3.2M",
+                sbParticipation: "22%",
+                competitionRate: "81%",
+                timeToAward: "156 days",
+                activeOpportunities: 78,
+                opportunityLevel: "low",
+                selected: false
+            }
+        ];
+
+        const mockCompetitors = [
+            {
+                rank: 1,
+                name: "Booz Allen Hamilton",
+                contracts: 1247,
+                totalValue: "$2.8B",
+                winRate: "34%",
+                avgSize: "$2.2M"
+            },
+            {
+                rank: 2,
+                name: "Deloitte Consulting",
+                contracts: 892,
+                totalValue: "$2.1B",
+                winRate: "31%",
+                avgSize: "$2.4M"
+            },
+            {
+                rank: 3,
+                name: "CACI International",
+                contracts: 1134,
+                totalValue: "$1.9B",
+                winRate: "29%",
+                avgSize: "$1.7M"
+            },
+            {
+                rank: 4,
+                name: "SAIC",
+                contracts: 967,
+                totalValue: "$1.6B",
+                winRate: "28%",
+                avgSize: "$1.7M"
+            },
+            {
+                rank: 5,
+                name: "General Dynamics IT",
+                contracts: 743,
+                totalValue: "$1.4B",
+                winRate: "26%",
+                avgSize: "$1.9M"
+            }
+        ];
+
+        const mockTrends = [
+            {
+                title: "Small Business Set-Asides",
+                description: "Increasing 15% year-over-year",
+                trend: "up",
+                change: "+15%"
+            },
+            {
+                title: "Cybersecurity Contracts",
+                description: "High demand across all agencies",
+                trend: "up",
+                change: "+23%"
+            },
+            {
+                title: "Contract Duration",
+                description: "Average decreasing to 18 months",
+                trend: "down",
+                change: "-8%"
+            },
+            {
+                title: "Competition Rate",
+                description: "Stable across most agencies",
+                trend: "stable",
+                change: "±2%"
+            }
+        ];
+
+        const mockInsights = [
+            {
+                title: "AI Opportunity Alert",
+                content: "DoD is increasing AI/ML contract opportunities by 40% this quarter. Your cybersecurity expertise aligns well with emerging requirements."
+            },
+            {
+                title: "Market Timing Insight",
+                content: "VA historically awards 60% more contracts in Q4. Consider targeting October submissions for higher success probability."
+            },
+            {
+                title: "Competitive Advantage",
+                content: "Your 8(a) certification provides access to $2.3B in set-aside opportunities that major competitors cannot bid on."
+            }
+        ];
+
+        function AgencyIntelligenceDashboard() {
+            const [agencies, setAgencies] = useState(mockAgencies);
+            const [selectedAgency, setSelectedAgency] = useState(null);
+            const [activeTab, setActiveTab] = useState('agencies');
+            const [timeRange, setTimeRange] = useState('12months');
+            const [agencyType, setAgencyType] = useState('all');
+
+            const filteredAgencies = useMemo(() => {
+                if (agencyType === 'all') return agencies;
+                return agencies.filter(agency => agency.type.toLowerCase() === agencyType.toLowerCase());
+            }, [agencies, agencyType]);
+
+            const handleAgencySelect = (agency) => {
+                setAgencies(prev => 
+                    prev.map(a => ({ ...a, selected: a.id === agency.id ? !a.selected : false }))
+                );
+                setSelectedAgency(agency.id === selectedAgency?.id ? null : agency);
+            };
+
+            const renderAgenciesView = () => (
+                <div className="agencies-grid">
+                    {filteredAgencies.map(agency => (
+                        <div 
+                            key={agency.id} 
+                            className={`agency-card ${agency.selected ? 'selected' : ''}`}
+                            onClick={() => handleAgencySelect(agency)}
+                        >
+                            <div className="agency-header">
+                                <div className="agency-info">
+                                    <div className="agency-name">{agency.name}</div>
+                                    <div className="agency-type">{agency.type}</div>
+                                </div>
+                                <div className="agency-spending">{agency.totalSpending}</div>
+                            </div>
+
+                            <div className="agency-metrics">
+                                <div className="metric-item">
+                                    <span className="metric-label">Avg Contract:</span>
+                                    <span className="metric-value">{agency.avgContractSize}</span>
+                                </div>
+                                <div className="metric-item">
+                                    <span className="metric-label">SB Rate:</span>
+                                    <span className="metric-value">{agency.sbParticipation}</span>
+                                </div>
+                                <div className="metric-item">
+                                    <span className="metric-label">Competition:</span>
+                                    <span className="metric-value">{agency.competitionRate}</span>
+                                </div>
+                                <div className="metric-item">
+                                    <span className="metric-label">Time to Award:</span>
+                                    <span className="metric-value">{agency.timeToAward}</span>
+                                </div>
+                            </div>
+
+                            <div className="opportunity-indicators">
+                                <div className={`indicator ${agency.opportunityLevel}`}>
+                                    {agency.opportunityLevel} opportunity
+                                </div>
+                                <div className="indicator medium">
+                                    {agency.activeOpportunities} active
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+
+            const renderMarketAnalysis = () => (
+                <div className="chart-grid">
+                    <div className="chart-card">
+                        <div className="chart-title">
+                            <i className="fas fa-chart-line"></i>
+                            Spending Trends
+                        </div>
+                        <div className="chart-container">
+                            <div style={{textAlign: 'center', color: 'var(--gray-500)', paddingTop: '100px'}}>
+                                <i className="fas fa-chart-line" style={{fontSize: '48px', marginBottom: '16px'}}></i>
+                                <div>Interactive Chart Coming Soon</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="chart-card">
+                        <div className="chart-title">
+                            <i className="fas fa-chart-pie"></i>
+                            Contract Distribution
+                        </div>
+                        <div className="chart-container">
+                            <div style={{textAlign: 'center', color: 'var(--gray-500)', paddingTop: '100px'}}>
+                                <i className="fas fa-chart-pie" style={{fontSize: '48px', marginBottom: '16px'}}></i>
+                                <div>Interactive Chart Coming Soon</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderCompetitiveLandscape = () => (
+                <div className="competitor-list">
+                    {mockCompetitors.map(competitor => (
+                        <div key={competitor.rank} className="competitor-item">
+                            <div className="competitor-rank">{competitor.rank}</div>
+                            <div className="competitor-info">
+                                <div className="competitor-name">{competitor.name}</div>
+                                <div className="competitor-details">
+                                    {competitor.contracts} contracts • {competitor.totalValue} total value
+                                </div>
+                            </div>
+                            <div className="competitor-stats">
+                                <div className="competitor-stat">
+                                    <div className="competitor-stat-value">{competitor.winRate}</div>
+                                    <div className="competitor-stat-label">Win Rate</div>
+                                </div>
+                                <div className="competitor-stat">
+                                    <div className="competitor-stat-value">{competitor.avgSize}</div>
+                                    <div className="competitor-stat-label">Avg Size</div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+
+            return (
+                <div className="intelligence-container">
+                    {/* Header */}
+                    <div className="header">
+                        <div className="header-content">
+                            <div className="header-left">
+                                <h1>
+                                    <i className="fas fa-chart-network"></i>
+                                    Agency Intelligence & Market Analysis
+                                </h1>
+                                <div className="subtitle">
+                                    Comprehensive market intelligence for strategic decision making
+                                </div>
+                            </div>
+                            
+                            <div className="header-controls">
+                                <div className="control-group">
+                                    <div className="control-label">Time Range</div>
+                                    <select 
+                                        className="control-select"
+                                        value={timeRange}
+                                        onChange={(e) => setTimeRange(e.target.value)}
+                                    >
+                                        <option value="6months">Last 6 Months</option>
+                                        <option value="12months">Last 12 Months</option>
+                                        <option value="24months">Last 24 Months</option>
+                                    </select>
+                                </div>
+                                <div className="control-group">
+                                    <div className="control-label">Agency Type</div>
+                                    <select 
+                                        className="control-select"
+                                        value={agencyType}
+                                        onChange={(e) => setAgencyType(e.target.value)}
+                                    >
+                                        <option value="all">All Agencies</option>
+                                        <option value="defense">Defense</option>
+                                        <option value="healthcare">Healthcare</option>
+                                        <option value="security">Security</option>
+                                        <option value="energy">Energy</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="main-grid">
+                        {/* Main Content */}
+                        <div className="content-area">
+                            <div className="section-card">
+                                <div className="section-header">
+                                    <div className="section-title">
+                                        <i className="fas fa-building"></i>
+                                        Intelligence Dashboard
+                                    </div>
+                                    <div className="section-controls">
+                                        <button 
+                                            className={`tab-button ${activeTab === 'agencies' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('agencies')}
+                                        >
+                                            Agency Profiles
+                                        </button>
+                                        <button 
+                                            className={`tab-button ${activeTab === 'market' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('market')}
+                                        >
+                                            Market Analysis
+                                        </button>
+                                        <button 
+                                            className={`tab-button ${activeTab === 'competitive' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('competitive')}
+                                        >
+                                            Competitive Landscape
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="section-content">
+                                    {activeTab === 'agencies' && renderAgenciesView()}
+                                    {activeTab === 'market' && renderMarketAnalysis()}
+                                    {activeTab === 'competitive' && renderCompetitiveLandscape()}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Sidebar */}
+                        <div className="sidebar">
+                            {/* Market Trends */}
+                            <div className="panel-card">
+                                <div className="panel-header">
+                                    <i className="fas fa-trending-up"></i>
+                                    Market Trends
+                                </div>
+                                <div className="panel-content">
+                                    {mockTrends.map((trend, index) => (
+                                        <div key={index} className="trend-item">
+                                            <div className={`trend-icon ${trend.trend}`}>
+                                                <i className={
+                                                    trend.trend === 'up' ? 'fas fa-arrow-up' :
+                                                    trend.trend === 'down' ? 'fas fa-arrow-down' :
+                                                    'fas fa-minus'
+                                                }></i>
+                                            </div>
+                                            <div className="trend-content">
+                                                <div className="trend-title">{trend.title}</div>
+                                                <div className="trend-desc">{trend.description}</div>
+                                            </div>
+                                            <div className={`trend-change ${trend.trend === 'up' ? 'positive' : trend.trend === 'down' ? 'negative' : ''}`}>
+                                                {trend.change}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* AI Insights */}
+                            <div className="panel-card">
+                                <div className="panel-header">
+                                    <i className="fas fa-brain"></i>
+                                    Smart Insights
+                                </div>
+                                <div className="panel-content">
+                                    {mockInsights.map((insight, index) => (
+                                        <div key={index} className="insight-item">
+                                            <div className="insight-header">
+                                                <i className="fas fa-lightbulb"></i>
+                                                {insight.title}
+                                            </div>
+                                            <div className="insight-content">
+                                                {insight.content}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<AgencyIntelligenceDashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>

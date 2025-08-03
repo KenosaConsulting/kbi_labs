@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBI Labs - SMB Government Contractor Intelligence Platform</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --success-green: #10b981;
+            --warning-orange: #f59e0b;
+            --danger-red: #ef4444;
+            --purple-accent: #8b5cf6;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 40px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .hero-stat {
+            text-align: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .hero-stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 40px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 32px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border-top: 4px solid var(--primary-blue);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-card.success { border-top-color: var(--success-green); }
+        .feature-card.warning { border-top-color: var(--warning-orange); }
+        .feature-card.purple { border-top-color: var(--purple-accent); }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            background: var(--primary-blue);
+            margin-bottom: 24px;
+        }
+
+        .feature-icon.success { background: var(--success-green); }
+        .feature-icon.warning { background: var(--warning-orange); }
+        .feature-icon.purple { background: var(--purple-accent); }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+        }
+
+        .feature-description {
+            color: var(--gray-600);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .feature-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-blue);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .feature-link:hover {
+            color: #1d4ed8;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--gray-600);
+            text-align: center;
+            margin-bottom: 64px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .api-status {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 48px;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .status-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--success-green);
+        }
+
+        .status-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--gray-50);
+            border-radius: 12px;
+        }
+
+        .status-item-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success-green);
+            margin-bottom: 8px;
+        }
+
+        .status-item-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 60px 20px;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+                flex-direction: column;
+            }
+
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .container {
+                padding: 60px 20px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-card {
+                padding: 24px;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .status-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero">
+        <h1>
+            <i class="fas fa-chart-network"></i>
+            KBI Labs Platform
+        </h1>
+        <div class="subtitle">
+            AI-Powered SMB Government Contractor Intelligence Platform
+        </div>
+        
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-value">84%+</div>
+                <div class="hero-stat-label">AI Prediction Accuracy</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">$50B+</div>
+                <div class="hero-stat-label">SMB Opportunities</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">70+</div>
+                <div class="hero-stat-label">Government APIs</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">2s</div>
+                <div class="hero-stat-label">Page Load Time</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- API Status -->
+        <div class="api-status">
+            <div class="status-header">
+                <div class="status-indicator"></div>
+                <div class="status-title">Platform Status - All Systems Operational</div>
+            </div>
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-item-value">Healthy</div>
+                    <div class="status-item-label">API Status</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-item-value">5</div>
+                    <div class="status-item-label">Opportunities Loaded</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-item-value">Online</div>
+                    <div class="status-item-label">ML Models</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-item-value">Active</div>
+                    <div class="status-item-label">Data Pipeline</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="section-title">Complete SMB Contractor Platform</div>
+        <div class="section-subtitle">
+            Professional-grade tools designed specifically for small-to-medium business government contractors
+        </div>
+
+        <div class="features-grid">
+            <!-- Main Dashboard -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-tachometer-alt"></i>
+                </div>
+                <div class="feature-title">SMB Government Contractor Dashboard</div>
+                <div class="feature-description">
+                    Complete professional dashboard with KPI cards, agency intelligence, smart alerts, and executive reporting. Optimized for small teams with minimal clicks to critical decisions.
+                </div>
+                <a href="smb_government_contractor_platform.html" class="feature-link">
+                    Launch Dashboard <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Go/No-Go Engine -->
+            <div class="feature-card success">
+                <div class="feature-icon success">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="feature-title">AI-Powered Go/No-Go Decision Engine</div>
+                <div class="feature-description">
+                    Fast decision engine with AI scoring, win probability analysis, and clear "Pursue", "Pass", or "Analyze" recommendations. Batch processing for multiple opportunities.
+                </div>
+                <a href="go_nogo_decision_engine.html" class="feature-link">
+                    Launch Decision Engine <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Agency Intelligence -->
+            <div class="feature-card warning">
+                <div class="feature-icon warning">
+                    <i class="fas fa-chart-network"></i>
+                </div>
+                <div class="feature-title">Agency Intelligence & Market Analysis</div>
+                <div class="feature-description">
+                    Comprehensive agency profiles, spending patterns, competition analysis, and market timing insights. Real-time intelligence for strategic planning.
+                </div>
+                <a href="agency_intelligence_dashboard.html" class="feature-link">
+                    Launch Intelligence Dashboard <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- API Access -->
+            <div class="feature-card purple">
+                <div class="feature-icon purple">
+                    <i class="fas fa-code"></i>
+                </div>
+                <div class="feature-title">Advanced API & ML Services</div>
+                <div class="feature-description">
+                    Access to 70+ government APIs, ML-powered contract success prediction, fraud detection, and automated opportunity matching. RESTful API with OpenAPI documentation.
+                </div>
+                <a href="http://localhost:8000/docs" class="feature-link" target="_blank">
+                    View API Documentation <i class="fas fa-external-link-alt"></i>
+                </a>
+            </div>
+
+            <!-- Pipeline Management -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="feature-title">SMB Workflow Tools</div>
+                <div class="feature-description">
+                    Pipeline management, deadline tracking, resource planning, and ROI analysis. Designed for small business development teams with 1-5 members.
+                </div>
+                <a href="#" class="feature-link">
+                    Coming Soon <i class="fas fa-clock"></i>
+                </a>
+            </div>
+
+            <!-- Policy & Regulations -->
+            <div class="feature-card purple">
+                <div class="feature-icon purple">
+                    <i class="fas fa-gavel"></i>
+                </div>
+                <div class="feature-title">Policy & Regulations Intelligence</div>
+                <div class="feature-description">
+                    AI-powered regulatory compliance tracking, policy impact analysis, and automated compliance monitoring. Real-time updates from Federal Register and congressional sources.
+                </div>
+                <a href="policy_regulations_dashboard.html" class="feature-link">
+                    Launch Policy Dashboard <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Competitive Analysis -->
+            <div class="feature-card success">
+                <div class="feature-icon success">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="feature-title">Competitive Landscape Analysis</div>
+                <div class="feature-description">
+                    Track major competitors, analyze win rates, identify teaming opportunities, and understand market positioning for strategic advantage.
+                </div>
+                <a href="#" class="feature-link">
+                    Available in Intelligence Dashboard <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Key Features -->
+        <div style="margin-top: 80px;">
+            <div class="section-title">Platform Highlights</div>
+            <div class="features-grid">
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 3rem; color: var(--success-green); margin-bottom: 16px;">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3 style="color: var(--gray-900); margin-bottom: 12px;">Speed to Decision</h3>
+                    <p style="color: var(--gray-600);">Go/no-go decisions in under 3 clicks with 14-day pipeline focus and deadline alerts</p>
+                </div>
+                
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 3rem; color: var(--primary-blue); margin-bottom: 16px;">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 style="color: var(--gray-900); margin-bottom: 12px;">AI Intelligence</h3>
+                    <p style="color: var(--gray-600);">84%+ prediction accuracy with automated opportunity scoring and market analysis</p>
+                </div>
+                
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 3rem; color: var(--warning-orange); margin-bottom: 16px;">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <h3 style="color: var(--gray-900); margin-bottom: 12px;">SMB Focus</h3>
+                    <p style="color: var(--gray-600);">$100K-$5M sweet spot targeting with SB, 8(a), WOSB, VOSB opportunity highlighting</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Check Script -->
+    <script>
+        // Check API health and update status
+        fetch('http://localhost:8000/health')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Platform Status:', data);
+                if (data.opportunities_loaded) {
+                    document.querySelector('.status-grid .status-item:nth-child(2) .status-item-value').textContent = data.opportunities_loaded;
+                }
+            })
+            .catch(error => {
+                console.log('API Status:', error);
+                document.querySelector('.status-indicator').style.background = 'var(--warning-orange)';
+                document.querySelector('.status-title').textContent = 'Platform Status - API Offline (Demo Mode)';
+            });
+    </script>
+</body>
+</html>

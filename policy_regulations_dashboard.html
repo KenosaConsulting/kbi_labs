@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBI Labs - Policy & Regulations Intelligence</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --success-green: #10b981;
+            --warning-orange: #f59e0b;
+            --danger-red: #ef4444;
+            --purple-accent: #8b5cf6;
+            --indigo-accent: #6366f1;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .policy-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--indigo-accent) 0%, var(--purple-accent) 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-left .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 24px;
+        }
+
+        .header-alerts {
+            display: flex;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .alert-stat {
+            text-align: center;
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            min-width: 120px;
+        }
+
+        .alert-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .alert-stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-button {
+            padding: 8px 16px;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            background: white;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-button.active {
+            background: var(--indigo-accent);
+            border-color: var(--indigo-accent);
+            color: white;
+        }
+
+        .section-content {
+            padding: 24px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        /* Regulatory Changes Feed */
+        .regulatory-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .regulation-item {
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .regulation-item:hover {
+            border-color: var(--indigo-accent);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        }
+
+        .regulation-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .regulation-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 1rem;
+            line-height: 1.4;
+            flex: 1;
+            margin-right: 16px;
+        }
+
+        .impact-badge {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .impact-badge.high {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .impact-badge.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-orange);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .impact-badge.low {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .regulation-meta {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 12px;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .regulation-summary {
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .regulation-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .regulation-tag {
+            padding: 4px 8px;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .regulation-tag.procurement { background: rgba(37, 99, 235, 0.1); color: var(--primary-blue); }
+        .regulation-tag.cybersecurity { background: rgba(239, 68, 68, 0.1); color: var(--danger-red); }
+        .regulation-tag.compliance { background: rgba(245, 158, 11, 0.1); color: var(--warning-orange); }
+
+        /* Compliance Tracker */
+        .compliance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .compliance-card {
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px;
+            background: var(--gray-50);
+        }
+
+        .compliance-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .compliance-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 1rem;
+        }
+
+        .compliance-status {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .compliance-status.compliant {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+        }
+
+        .compliance-status.at-risk {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-orange);
+        }
+
+        .compliance-status.non-compliant {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-red);
+        }
+
+        .compliance-progress {
+            margin-bottom: 16px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .progress-fill.high { background: var(--success-green); }
+        .progress-fill.medium { background: var(--warning-orange); }
+        .progress-fill.low { background: var(--danger-red); }
+
+        .progress-text {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            display: flex;
+            justify-content: between;
+        }
+
+        .compliance-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            background: white;
+            color: var(--gray-600);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--gray-50);
+            border-color: var(--indigo-accent);
+            color: var(--indigo-accent);
+        }
+
+        /* Policy Impact Analysis */
+        .impact-analysis {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .impact-item {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .impact-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .impact-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+            background: var(--indigo-accent);
+        }
+
+        .impact-content {
+            flex: 1;
+        }
+
+        .impact-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .impact-description {
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .impact-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .impact-metric {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        .impact-metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--indigo-accent);
+            margin-bottom: 4px;
+        }
+
+        .impact-metric-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+        }
+
+        /* Sidebar Panels */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .panel-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-200);
+            font-weight: 600;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel-content {
+            padding: 20px;
+        }
+
+        /* Watchlist */
+        .watchlist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .watchlist-item:last-child {
+            border-bottom: none;
+        }
+
+        .watchlist-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .watchlist-indicator.active { background: var(--success-green); }
+        .watchlist-indicator.pending { background: var(--warning-orange); }
+        .watchlist-indicator.overdue { background: var(--danger-red); }
+
+        .watchlist-content {
+            flex: 1;
+        }
+
+        .watchlist-title {
+            font-weight: 500;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+            margin-bottom: 2px;
+        }
+
+        .watchlist-desc {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        /* AI Insights */
+        .ai-insight {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(168, 85, 247, 0.05));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .ai-insight-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--purple-accent);
+            font-size: 0.875rem;
+        }
+
+        .ai-insight-content {
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .compliance-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .policy-container {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 24px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .header-alerts {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .compliance-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .impact-metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--gray-500);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gray-300);
+            border-top: 2px solid var(--indigo-accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // Mock regulatory data
+        const mockRegulations = [
+            {
+                id: 1,
+                title: "Federal Acquisition Regulation (FAR) 52.225-5 Trade Agreements Act - Amendment",
+                agency: "General Services Administration",
+                docType: "Final Rule",
+                publicationDate: "2025-07-28",
+                effectiveDate: "2025-09-01",
+                impact: "high",
+                impactScore: 95,
+                summary: "Significant changes to Trade Agreements Act compliance requirements for government contractors. New certification processes and supply chain documentation requirements.",
+                tags: ["procurement", "trade", "compliance"],
+                keyChanges: [
+                    "New supplier certification requirements",
+                    "Enhanced supply chain documentation",
+                    "Updated compliance deadlines"
+                ]
+            },
+            {
+                id: 2,
+                title: "Cybersecurity Maturity Model Certification (CMMC) 2.0 Implementation",
+                agency: "Department of Defense",
+                docType: "Interim Rule", 
+                publicationDate: "2025-07-25",
+                effectiveDate: "2025-10-15",
+                impact: "high",
+                impactScore: 92,
+                summary: "Implementation of CMMC 2.0 requirements for DoD contractors. Streamlined assessment process with three levels of cybersecurity standards.",
+                tags: ["cybersecurity", "defense", "certification"],
+                keyChanges: [
+                    "Three-tiered certification levels",
+                    "Self-assessment for Level 1",
+                    "Third-party assessment for Levels 2-3"
+                ]
+            },
+            {
+                id: 3,
+                title: "Small Business Administration - HUBZone Program Updates",
+                agency: "Small Business Administration",
+                docType: "Proposed Rule",
+                publicationDate: "2025-07-22",
+                effectiveDate: "2025-08-30",
+                impact: "medium",
+                impactScore: 78,
+                summary: "Updates to HUBZone eligibility criteria and certification processes. Expanded geographic areas and streamlined application procedures.",
+                tags: ["small-business", "hubzone", "certification"],
+                keyChanges: [
+                    "Expanded qualifying areas",
+                    "Digital application process",
+                    "Faster certification timeline"
+                ]
+            },
+            {
+                id: 4,
+                title: "Environmental Protection Agency - Green Procurement Standards",
+                agency: "Environmental Protection Agency",
+                docType: "Notice",
+                publicationDate: "2025-07-20",
+                effectiveDate: "2025-12-01",
+                impact: "medium",
+                impactScore: 65,
+                summary: "New environmental standards for federal procurement. Requirements for sustainable products and carbon footprint reporting.",
+                tags: ["environment", "sustainability", "procurement"],
+                keyChanges: [
+                    "Sustainable product requirements",
+                    "Carbon footprint reporting",
+                    "Green certification preferences"
+                ]
+            },
+            {
+                id: 5,
+                title: "Office of Federal Procurement Policy - AI Ethics Guidelines",
+                agency: "Office of Management and Budget",
+                docType: "Guidance",
+                publicationDate: "2025-07-18",
+                effectiveDate: "2025-11-01",
+                impact: "high",
+                impactScore: 88,
+                summary: "Comprehensive guidelines for AI ethics in federal contracting. Requirements for algorithmic transparency and bias testing.",
+                tags: ["ai", "ethics", "technology"],
+                keyChanges: [
+                    "AI bias testing requirements",
+                    "Algorithmic transparency standards",
+                    "Ethics review processes"
+                ]
+            }
+        ];
+
+        const mockComplianceItems = [
+            {
+                id: 1,
+                title: "FAR 52.204-21 Basic Safeguarding",
+                status: "compliant",
+                progress: 100,
+                dueDate: "2025-12-31",
+                description: "Basic cybersecurity safeguarding requirements",
+                actions: ["Review", "Update"]
+            },
+            {
+                id: 2,
+                title: "CMMC Level 2 Certification",
+                status: "at-risk",
+                progress: 65,
+                dueDate: "2025-10-15",
+                description: "CMMC 2.0 Level 2 certification requirements",
+                actions: ["Assess", "Remediate", "Schedule"]
+            },
+            {
+                id: 3,
+                title: "Trade Agreements Act Compliance",
+                status: "non-compliant",
+                progress: 25,
+                dueDate: "2025-09-01",
+                description: "Updated TAA compliance certification",
+                actions: ["Urgent", "Review", "Certify"]
+            },
+            {
+                id: 4,
+                title: "Equal Employment Opportunity",
+                status: "compliant",
+                progress: 90,
+                dueDate: "2026-03-15",
+                description: "EEO compliance and reporting requirements",
+                actions: ["Monitor", "Report"]
+            }
+        ];
+
+        const mockPolicyImpacts = [
+            {
+                id: 1,
+                title: "CMMC 2.0 Implementation Impact",
+                description: "Analysis of CMMC 2.0 requirements on your current contracts and future opportunities",
+                affectedContracts: 12,
+                potentialRevenue: "$4.2M",
+                complianceCost: "$85K",
+                timeline: "6 months"
+            },
+            {
+                id: 2,
+                title: "Trade Agreements Act Changes",
+                description: "Impact assessment of new TAA requirements on supply chain and procurement processes",
+                affectedContracts: 8,
+                potentialRevenue: "$2.1M",
+                complianceCost: "$25K",
+                timeline: "3 months"
+            },
+            {
+                id: 3,
+                title: "AI Ethics Guidelines Implementation",
+                description: "Preparation requirements for new AI ethics standards in federal contracting",
+                affectedContracts: 3,
+                potentialRevenue: "$1.8M",
+                complianceCost: "$45K",
+                timeline: "4 months"
+            }
+        ];
+
+        const mockWatchlist = [
+            {
+                id: 1,
+                title: "FAR Case 2024-009",
+                description: "Proposed changes to payment terms",
+                status: "pending",
+                dueDate: "2025-08-15"
+            },
+            {
+                id: 2,
+                title: "DFARS Cybersecurity Update",
+                description: "New DFARS cybersecurity requirements",
+                status: "active",
+                dueDate: "2025-09-30"
+            },
+            {
+                id: 3,
+                title: "SBA Size Standards Review",
+                description: "Annual size standards review process",
+                status: "overdue",
+                dueDate: "2025-07-31"
+            }
+        ];
+
+        const mockAIInsights = [
+            {
+                title: "Regulatory Risk Alert",
+                content: "Based on your current contracts, CMMC 2.0 implementation poses moderate risk. Recommend starting Level 2 assessment within 30 days."
+            },
+            {
+                title: "Compliance Opportunity",
+                content: "New HUBZone areas include your headquarters location. Consider HUBZone certification to access additional set-aside opportunities."
+            },
+            {
+                title: "Policy Trend Analysis",
+                content: "Federal agencies are increasing emphasis on cybersecurity requirements. 73% of new solicitations include enhanced cyber standards."
+            }
+        ];
+
+        function PolicyRegulationsDashboard() {
+            const [activeTab, setActiveTab] = useState('regulations');
+            const [selectedRegulation, setSelectedRegulation] = useState(null);
+            const [filterImpact, setFilterImpact] = useState('all');
+
+            const filteredRegulations = useMemo(() => {
+                if (filterImpact === 'all') return mockRegulations;
+                return mockRegulations.filter(reg => reg.impact === filterImpact);
+            }, [filterImpact]);
+
+            const stats = useMemo(() => {
+                return {
+                    activeRegulations: mockRegulations.length,
+                    highImpact: mockRegulations.filter(r => r.impact === 'high').length,
+                    complianceItems: mockComplianceItems.length,
+                    atRisk: mockComplianceItems.filter(c => c.status === 'at-risk' || c.status === 'non-compliant').length
+                };
+            }, []);
+
+            const renderRegulationsView = () => (
+                <div className="regulatory-feed">
+                    {filteredRegulations.map(regulation => (
+                        <div 
+                            key={regulation.id} 
+                            className="regulation-item"
+                            onClick={() => setSelectedRegulation(regulation)}
+                        >
+                            <div className="regulation-header">
+                                <div className="regulation-title">{regulation.title}</div>
+                                <div className={`impact-badge ${regulation.impact}`}>
+                                    {regulation.impact} impact
+                                </div>
+                            </div>
+
+                            <div className="regulation-meta">
+                                <div className="meta-item">
+                                    <i className="fas fa-building"></i>
+                                    {regulation.agency}
+                                </div>
+                                <div className="meta-item">
+                                    <i className="fas fa-file-alt"></i>
+                                    {regulation.docType}
+                                </div>
+                                <div className="meta-item">
+                                    <i className="fas fa-calendar"></i>
+                                    Effective: {regulation.effectiveDate}
+                                </div>
+                                <div className="meta-item">
+                                    <i className="fas fa-chart-line"></i>
+                                    Impact Score: {regulation.impactScore}%
+                                </div>
+                            </div>
+
+                            <div className="regulation-summary">
+                                {regulation.summary}
+                            </div>
+
+                            <div className="regulation-tags">
+                                {regulation.tags.map(tag => (
+                                    <span key={tag} className={`regulation-tag ${tag}`}>
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+
+            const renderComplianceView = () => (
+                <div className="compliance-grid">
+                    {mockComplianceItems.map(item => (
+                        <div key={item.id} className="compliance-card">
+                            <div className="compliance-header">
+                                <div className="compliance-title">{item.title}</div>
+                                <div className={`compliance-status ${item.status}`}>
+                                    {item.status.replace('-', ' ')}
+                                </div>
+                            </div>
+
+                            <div className="compliance-progress">
+                                <div className="progress-bar">
+                                    <div 
+                                        className={`progress-fill ${
+                                            item.progress >= 80 ? 'high' : 
+                                            item.progress >= 50 ? 'medium' : 'low'
+                                        }`}
+                                        style={{width: `${item.progress}%`}}
+                                    ></div>
+                                </div>
+                                <div className="progress-text">
+                                    <span>{item.progress}% Complete</span>
+                                    <span>Due: {item.dueDate}</span>
+                                </div>
+                            </div>
+
+                            <div style={{marginBottom: '16px', fontSize: '0.875rem', color: 'var(--gray-600)'}}>
+                                {item.description}
+                            </div>
+
+                            <div className="compliance-actions">
+                                {item.actions.map(action => (
+                                    <button key={action} className="action-btn">
+                                        {action}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+
+            const renderImpactView = () => (
+                <div className="impact-analysis">
+                    {mockPolicyImpacts.map(impact => (
+                        <div key={impact.id} className="impact-item">
+                            <div className="impact-header">
+                                <div className="impact-icon">
+                                    <i className="fas fa-chart-bar"></i>
+                                </div>
+                                <div className="impact-content">
+                                    <div className="impact-title">{impact.title}</div>
+                                    <div className="impact-description">{impact.description}</div>
+                                </div>
+                            </div>
+
+                            <div className="impact-metrics">
+                                <div className="impact-metric">
+                                    <div className="impact-metric-value">{impact.affectedContracts}</div>
+                                    <div className="impact-metric-label">Affected Contracts</div>
+                                </div>
+                                <div className="impact-metric">
+                                    <div className="impact-metric-value">{impact.potentialRevenue}</div>
+                                    <div className="impact-metric-label">Revenue at Risk</div>
+                                </div>
+                                <div className="impact-metric">
+                                    <div className="impact-metric-value">{impact.complianceCost}</div>
+                                    <div className="impact-metric-label">Compliance Cost</div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+
+            return (
+                <div className="policy-container">
+                    {/* Header */}
+                    <div className="header">
+                        <div className="header-content">
+                            <div className="header-left">
+                                <h1>
+                                    <i className="fas fa-gavel"></i>
+                                    Policy & Regulations Intelligence
+                                </h1>
+                                <div className="subtitle">
+                                    AI-powered regulatory compliance and policy impact analysis for SMB contractors
+                                </div>
+                                
+                                <div className="header-alerts">
+                                    <div className="alert-stat">
+                                        <div className="alert-stat-value">{stats.activeRegulations}</div>
+                                        <div className="alert-stat-label">Active Regulations</div>
+                                    </div>
+                                    <div className="alert-stat">
+                                        <div className="alert-stat-value">{stats.highImpact}</div>
+                                        <div className="alert-stat-label">High Impact</div>
+                                    </div>
+                                    <div className="alert-stat">
+                                        <div className="alert-stat-value">{stats.complianceItems}</div>
+                                        <div className="alert-stat-label">Compliance Items</div>
+                                    </div>
+                                    <div className="alert-stat">
+                                        <div className="alert-stat-value">{stats.atRisk}</div>
+                                        <div className="alert-stat-label">At Risk</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="main-grid">
+                        {/* Main Content */}
+                        <div className="content-area">
+                            <div className="section-card">
+                                <div className="section-header">
+                                    <div className="section-title">
+                                        <i className="fas fa-clipboard-list"></i>
+                                        Regulatory Intelligence Dashboard
+                                    </div>
+                                    <div className="section-controls">
+                                        <button 
+                                            className={`tab-button ${activeTab === 'regulations' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('regulations')}
+                                        >
+                                            <i className="fas fa-file-alt"></i>
+                                            Regulatory Changes
+                                        </button>
+                                        <button 
+                                            className={`tab-button ${activeTab === 'compliance' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('compliance')}
+                                        >
+                                            <i className="fas fa-check-circle"></i>
+                                            Compliance Tracker
+                                        </button>
+                                        <button 
+                                            className={`tab-button ${activeTab === 'impact' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('impact')}
+                                        >
+                                            <i className="fas fa-chart-line"></i>
+                                            Impact Analysis
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {activeTab === 'regulations' && (
+                                    <div style={{padding: '20px 24px 0'}}>
+                                        <div style={{display: 'flex', gap: '8px', marginBottom: '20px'}}>
+                                            <button 
+                                                className={`tab-button ${filterImpact === 'all' ? 'active' : ''}`}
+                                                onClick={() => setFilterImpact('all')}
+                                            >
+                                                All ({mockRegulations.length})
+                                            </button>
+                                            <button 
+                                                className={`tab-button ${filterImpact === 'high' ? 'active' : ''}`}
+                                                onClick={() => setFilterImpact('high')}
+                                            >
+                                                High Impact ({mockRegulations.filter(r => r.impact === 'high').length})
+                                            </button>
+                                            <button 
+                                                className={`tab-button ${filterImpact === 'medium' ? 'active' : ''}`}
+                                                onClick={() => setFilterImpact('medium')}
+                                            >
+                                                Medium Impact ({mockRegulations.filter(r => r.impact === 'medium').length})
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="section-content">
+                                    {activeTab === 'regulations' && renderRegulationsView()}
+                                    {activeTab === 'compliance' && renderComplianceView()}
+                                    {activeTab === 'impact' && renderImpactView()}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Sidebar */}
+                        <div className="sidebar">
+                            {/* Regulatory Watchlist */}
+                            <div className="panel-card">
+                                <div className="panel-header">
+                                    <i className="fas fa-eye"></i>
+                                    Regulatory Watchlist
+                                </div>
+                                <div className="panel-content">
+                                    {mockWatchlist.map(item => (
+                                        <div key={item.id} className="watchlist-item">
+                                            <div className={`watchlist-indicator ${item.status}`}></div>
+                                            <div className="watchlist-content">
+                                                <div className="watchlist-title">{item.title}</div>
+                                                <div className="watchlist-desc">{item.description}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* AI Regulatory Insights */}
+                            <div className="panel-card">
+                                <div className="panel-header">
+                                    <i className="fas fa-brain"></i>
+                                    AI Regulatory Insights
+                                </div>
+                                <div className="panel-content">
+                                    {mockAIInsights.map((insight, index) => (
+                                        <div key={index} className="ai-insight">
+                                            <div className="ai-insight-header">
+                                                <i className="fas fa-lightbulb"></i>
+                                                {insight.title}
+                                            </div>
+                                            <div className="ai-insight-content">
+                                                {insight.content}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<PolicyRegulationsDashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>

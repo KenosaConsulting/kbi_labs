@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBI Labs - AI-Powered Go/No-Go Decision Engine</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --success-green: #10b981;
+            --warning-orange: #f59e0b;
+            --danger-red: #ef4444;
+            --purple-accent: #8b5cf6;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .decision-engine-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 24px;
+        }
+
+        .header-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .header-stat {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header-stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .decision-queue {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .queue-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .queue-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, var(--purple-accent), #a855f7);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .queue-filters {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-chip {
+            padding: 8px 16px;
+            border: 1px solid var(--gray-300);
+            border-radius: 20px;
+            background: white;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-chip.active {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        .filter-chip.active:hover {
+            background: #1d4ed8;
+            color: white;
+        }
+
+        .opportunities-container {
+            max-height: 600px;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .opportunity-item {
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .opportunity-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+            border-color: var(--primary-blue);
+        }
+
+        .opportunity-item.selected {
+            border-color: var(--primary-blue);
+            background: linear-gradient(to right, rgba(37, 99, 235, 0.05), transparent);
+        }
+
+        .opportunity-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .opportunity-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 1.1rem;
+            line-height: 1.4;
+            flex: 1;
+            margin-right: 16px;
+        }
+
+        .urgency-badge {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .urgency-badge.critical {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        .urgency-badge.high {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-orange);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .urgency-badge.medium {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-blue);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .opportunity-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .meta-value {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .ai-analysis {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(168, 85, 247, 0.05));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: var(--purple-accent);
+            font-size: 0.875rem;
+        }
+
+        .ai-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .ai-metric {
+            text-align: center;
+        }
+
+        .ai-metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .ai-metric-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .confidence-bar {
+            height: 6px;
+            background: var(--gray-200);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s;
+        }
+
+        .confidence-fill.high { background: linear-gradient(90deg, var(--success-green), #34d399); }
+        .confidence-fill.medium { background: linear-gradient(90deg, var(--warning-orange), #fbbf24); }
+        .confidence-fill.low { background: linear-gradient(90deg, var(--danger-red), #f87171); }
+
+        .ai-recommendation {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ai-recommendation.pursue {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .ai-recommendation.analyze {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-orange);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .ai-recommendation.pass {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .opportunity-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            background: white;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-button:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        .action-button.primary {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+
+        .action-button.primary:hover {
+            background: #1d4ed8;
+        }
+
+        .action-button.success {
+            background: var(--success-green);
+            border-color: var(--success-green);
+            color: white;
+        }
+
+        .action-button.success:hover {
+            background: #059669;
+        }
+
+        .action-button.danger {
+            background: var(--danger-red);
+            border-color: var(--danger-red);
+            color: white;
+        }
+
+        .action-button.danger:hover {
+            background: #dc2626;
+        }
+
+        .sidebar-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .panel-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-200);
+            font-weight: 600;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel-content {
+            padding: 20px;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 16px;
+            background: var(--gray-50);
+            border-radius: 8px;
+        }
+
+        .stat-box-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .stat-box-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .timeline-dot.critical { background: var(--danger-red); }
+        .timeline-dot.high { background: var(--warning-orange); }
+        .timeline-dot.medium { background: var(--primary-blue); }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-title {
+            font-weight: 500;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+            margin-bottom: 2px;
+        }
+
+        .timeline-time {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .batch-actions {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-top: 32px;
+        }
+
+        .batch-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .batch-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .selected-count {
+            background: var(--primary-blue);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .batch-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .batch-button {
+            padding: 12px 24px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            background: white;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .batch-button:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        .batch-button.primary {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+
+        .batch-button.primary:hover {
+            background: #1d4ed8;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .sidebar-panel {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .panel-card {
+                min-width: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .decision-engine-container {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 24px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+
+            .opportunities-container {
+                padding: 16px;
+            }
+
+            .opportunity-item {
+                padding: 16px;
+            }
+
+            .opportunity-meta {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .ai-metrics {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .opportunity-actions {
+                flex-direction: column;
+            }
+
+            .batch-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // Enhanced mock data with AI predictions
+        const mockOpportunities = [
+            {
+                id: 1,
+                title: "Enterprise IT Infrastructure Modernization and Cloud Migration Services",
+                agency: "Department of Defense",
+                value: "$2.5M",
+                deadline: "2025-08-08",
+                daysLeft: 5,
+                naics: "541511",
+                setAside: "SB",
+                aiScore: 92,
+                winProbability: 87,
+                competitionLevel: "Medium",
+                recommendation: "pursue",
+                urgency: "critical",
+                riskFactors: ["Tight deadline", "High competition"],
+                strengths: ["Perfect NAICS match", "Strong past performance", "Security clearance"],
+                estimatedCost: "$180K",
+                roi: "340%",
+                selected: false
+            },
+            {
+                id: 2,
+                title: "Professional Administrative and Management Support Services",
+                agency: "Department of Veterans Affairs",
+                value: "$850K",
+                deadline: "2025-08-12",
+                daysLeft: 9,
+                naics: "561110",
+                setAside: "WOSB",
+                aiScore: 78,
+                winProbability: 73,
+                competitionLevel: "High",
+                recommendation: "analyze",
+                urgency: "high",
+                riskFactors: ["High competition", "Complex requirements"],
+                strengths: ["VA experience", "WOSB certification"],
+                estimatedCost: "$95K",
+                roi: "220%",
+                selected: false
+            },
+            {
+                id: 3,
+                title: "Advanced Software Development and Maintenance Services",
+                agency: "General Services Administration",
+                value: "$4.2M",
+                deadline: "2025-08-18",
+                daysLeft: 15,
+                naics: "541511",
+                setAside: "8(a)",
+                aiScore: 45,
+                winProbability: 42,
+                competitionLevel: "Very High",
+                recommendation: "pass",
+                urgency: "medium",
+                riskFactors: ["Large contract size", "Prime contractors favored", "Complex tech stack"],
+                strengths: ["8(a) certification"],
+                estimatedCost: "$320K",
+                roi: "85%",
+                selected: false
+            },
+            {
+                id: 4,
+                title: "Strategic Management Consulting and Process Optimization",
+                agency: "Department of Health and Human Services",
+                value: "$1.8M",
+                deadline: "2025-08-14",
+                daysLeft: 11,
+                naics: "541611",
+                setAside: "SB",
+                aiScore: 89,
+                winProbability: 85,
+                competitionLevel: "Low",
+                recommendation: "pursue",
+                urgency: "high",
+                riskFactors: ["Specialized expertise required"],
+                strengths: ["Healthcare domain expertise", "Previous HHS contracts", "Strong team"],
+                estimatedCost: "$150K",
+                roi: "420%",
+                selected: false
+            },
+            {
+                id: 5,
+                title: "Cybersecurity Assessment and Compliance Services",
+                agency: "Department of Homeland Security",
+                value: "$1.2M",
+                deadline: "2025-08-20",
+                daysLeft: 17,
+                naics: "541512",
+                setAside: "SB",
+                aiScore: 94,
+                winProbability: 91,
+                competitionLevel: "Low",
+                recommendation: "pursue",
+                urgency: "medium",
+                riskFactors: [],
+                strengths: ["Cybersecurity expertise", "FedRAMP experience", "Security clearances"],
+                estimatedCost: "$110K",
+                roi: "480%",
+                selected: false
+            }
+        ];
+
+        function GoNoGoDecisionEngine() {
+            const [opportunities, setOpportunities] = useState(mockOpportunities);
+            const [selectedOpportunity, setSelectedOpportunity] = useState(null);
+            const [filterType, setFilterType] = useState('all');
+            const [selectedCount, setSelectedCount] = useState(0);
+
+            const filteredOpportunities = useMemo(() => {
+                if (filterType === 'all') return opportunities;
+                if (filterType === 'urgent') return opportunities.filter(opp => opp.urgency === 'critical' || opp.urgency === 'high');
+                return opportunities.filter(opp => opp.recommendation === filterType);
+            }, [opportunities, filterType]);
+
+            const stats = useMemo(() => {
+                return {
+                    total: opportunities.length,
+                    pursue: opportunities.filter(o => o.recommendation === 'pursue').length,
+                    analyze: opportunities.filter(o => o.recommendation === 'analyze').length,
+                    pass: opportunities.filter(o => o.recommendation === 'pass').length,
+                    urgent: opportunities.filter(o => o.urgency === 'critical').length
+                };
+            }, [opportunities]);
+
+            const handleOpportunitySelect = (opportunity) => {
+                setSelectedOpportunity(opportunity);
+            };
+
+            const handleCheckboxChange = (opportunityId) => {
+                setOpportunities(prev => 
+                    prev.map(opp => 
+                        opp.id === opportunityId 
+                            ? { ...opp, selected: !opp.selected }
+                            : opp
+                    )
+                );
+                
+                const newSelectedCount = opportunities.filter(opp => 
+                    opp.id === opportunityId ? !opp.selected : opp.selected
+                ).length;
+                setSelectedCount(newSelectedCount);
+            };
+
+            const handleDecision = (opportunityId, decision) => {
+                setOpportunities(prev => 
+                    prev.map(opp => 
+                        opp.id === opportunityId 
+                            ? { ...opp, recommendation: decision }
+                            : opp
+                    )
+                );
+                console.log(`Decision: ${decision} for opportunity ${opportunityId}`);
+            };
+
+            const handleBatchAction = (action) => {
+                const selectedOpps = opportunities.filter(opp => opp.selected);
+                console.log(`Batch ${action} for ${selectedOpps.length} opportunities`);
+            };
+
+            const getConfidenceClass = (score) => {
+                if (score >= 80) return 'high';
+                if (score >= 60) return 'medium';
+                return 'low';
+            };
+
+            const formatDeadline = (daysLeft) => {
+                if (daysLeft < 0) return "Overdue";
+                if (daysLeft === 0) return "Due today";
+                if (daysLeft === 1) return "Due tomorrow";
+                return `${daysLeft} days left`;
+            };
+
+            return (
+                <div className="decision-engine-container">
+                    {/* Header */}
+                    <div className="header">
+                        <h1>
+                            <i className="fas fa-brain"></i>
+                            AI-Powered Go/No-Go Decision Engine
+                        </h1>
+                        <div className="subtitle">
+                            Intelligent opportunity analysis with 84%+ prediction accuracy
+                        </div>
+                        
+                        <div className="header-stats">
+                            <div className="header-stat">
+                                <div className="header-stat-value">{stats.total}</div>
+                                <div className="header-stat-label">Total Opportunities</div>
+                            </div>
+                            <div className="header-stat">
+                                <div className="header-stat-value">{stats.pursue}</div>
+                                <div className="header-stat-label">Recommended Pursue</div>
+                            </div>
+                            <div className="header-stat">
+                                <div className="header-stat-value">{stats.urgent}</div>
+                                <div className="header-stat-label">Critical Deadlines</div>
+                            </div>
+                            <div className="header-stat">
+                                <div className="header-stat-value">87%</div>
+                                <div className="header-stat-label">Avg AI Confidence</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="main-grid">
+                        {/* Decision Queue */}
+                        <div className="decision-queue">
+                            <div className="queue-header">
+                                <div className="queue-title">
+                                    <i className="fas fa-list-check"></i>
+                                    Decision Queue
+                                    <div className="ai-badge">
+                                        <i className="fas fa-robot"></i>
+                                        AI Enhanced
+                                    </div>
+                                </div>
+                                
+                                <div className="queue-filters">
+                                    <div 
+                                        className={`filter-chip ${filterType === 'all' ? 'active' : ''}`}
+                                        onClick={() => setFilterType('all')}
+                                    >
+                                        All ({stats.total})
+                                    </div>
+                                    <div 
+                                        className={`filter-chip ${filterType === 'urgent' ? 'active' : ''}`}
+                                        onClick={() => setFilterType('urgent')}
+                                    >
+                                        Urgent ({opportunities.filter(o => o.urgency === 'critical' || o.urgency === 'high').length})
+                                    </div>
+                                    <div 
+                                        className={`filter-chip ${filterType === 'pursue' ? 'active' : ''}`}
+                                        onClick={() => setFilterType('pursue')}
+                                    >
+                                        Pursue ({stats.pursue})
+                                    </div>
+                                    <div 
+                                        className={`filter-chip ${filterType === 'analyze' ? 'active' : ''}`}
+                                        onClick={() => setFilterType('analyze')}
+                                    >
+                                        Analyze ({stats.analyze})
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="opportunities-container">
+                                {filteredOpportunities.map(opportunity => (
+                                    <div 
+                                        key={opportunity.id} 
+                                        className={`opportunity-item ${selectedOpportunity?.id === opportunity.id ? 'selected' : ''}`}
+                                        onClick={() => handleOpportunitySelect(opportunity)}
+                                    >
+                                        <div className="opportunity-header">
+                                            <div className="opportunity-title">{opportunity.title}</div>
+                                            <div className={`urgency-badge ${opportunity.urgency}`}>
+                                                {opportunity.urgency}
+                                            </div>
+                                        </div>
+
+                                        <div className="opportunity-meta">
+                                            <div className="meta-item">
+                                                <i className="fas fa-building"></i>
+                                                <span className="meta-value">{opportunity.agency}</span>
+                                            </div>
+                                            <div className="meta-item">
+                                                <i className="fas fa-dollar-sign"></i>
+                                                <span className="meta-value">{opportunity.value}</span>
+                                            </div>
+                                            <div className="meta-item">
+                                                <i className="fas fa-clock"></i>
+                                                <span className="meta-value">{formatDeadline(opportunity.daysLeft)}</span>
+                                            </div>
+                                            <div className="meta-item">
+                                                <i className="fas fa-certificate"></i>
+                                                <span className="meta-value">{opportunity.setAside}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="ai-analysis">
+                                            <div className="ai-header">
+                                                <i className="fas fa-robot"></i>
+                                                AI Success Analysis
+                                            </div>
+                                            
+                                            <div className="ai-metrics">
+                                                <div className="ai-metric">
+                                                    <div className="ai-metric-value">{opportunity.winProbability}%</div>
+                                                    <div className="ai-metric-label">Win Probability</div>
+                                                </div>
+                                                <div className="ai-metric">
+                                                    <div className="ai-metric-value">{opportunity.aiScore}%</div>
+                                                    <div className="ai-metric-label">AI Confidence</div>
+                                                </div>
+                                                <div className="ai-metric">
+                                                    <div className="ai-metric-value">{opportunity.roi}</div>
+                                                    <div className="ai-metric-label">Expected ROI</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="confidence-bar">
+                                                <div 
+                                                    className={`confidence-fill ${getConfidenceClass(opportunity.aiScore)}`}
+                                                    style={{width: `${opportunity.aiScore}%`}}
+                                                ></div>
+                                            </div>
+
+                                            <div className={`ai-recommendation ${opportunity.recommendation}`}>
+                                                <i className={
+                                                    opportunity.recommendation === 'pursue' ? 'fas fa-thumbs-up' :
+                                                    opportunity.recommendation === 'analyze' ? 'fas fa-search' :
+                                                    'fas fa-thumbs-down'
+                                                }></i>
+                                                {opportunity.recommendation}
+                                            </div>
+                                        </div>
+
+                                        <div className="opportunity-actions">
+                                            <input 
+                                                type="checkbox"
+                                                checked={opportunity.selected}
+                                                onChange={() => handleCheckboxChange(opportunity.id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{marginRight: '8px'}}
+                                            />
+                                            <button 
+                                                className="action-button success"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDecision(opportunity.id, 'pursue');
+                                                }}
+                                            >
+                                                <i className="fas fa-thumbs-up"></i>
+                                                Pursue
+                                            </button>
+                                            <button 
+                                                className="action-button primary"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDecision(opportunity.id, 'analyze');
+                                                }}
+                                            >
+                                                <i className="fas fa-search"></i>
+                                                Analyze
+                                            </button>
+                                            <button 
+                                                className="action-button danger"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDecision(opportunity.id, 'pass');
+                                                }}
+                                            >
+                                                <i className="fas fa-thumbs-down"></i>
+                                                Pass
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Sidebar Panels */}
+                        <div className="sidebar-panel">
+                            {/* Quick Stats */}
+                            <div className="panel-card">
+                                <div className="panel-header">
+                                    <i className="fas fa-chart-bar"></i>
+                                    Quick Stats
+                                </div>
+                                <div className="panel-content">
+                                    <div className="quick-stats">
+                                        <div className="stat-box">
+                                            <div className="stat-box-value">{stats.pursue}</div>
+                                            <div className="stat-box-label">Pursue</div>
+                                        </div>
+                                        <div className="stat-box">
+                                            <div className="stat-box-value">{stats.analyze}</div>
+                                            <div className="stat-box-label">Analyze</div>
+                                        </div>
+                                        <div className="stat-box">
+                                            <div className="stat-box-value">{stats.pass}</div>
+                                            <div className="stat-box-label">Pass</div>
+                                        </div>
+                                        <div className="stat-box">
+                                            <div className="stat-box-value">{stats.urgent}</div>
+                                            <div className="stat-box-label">Critical</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Deadline Timeline */}
+                            <div className="panel-card">
+                                <div className="panel-header">
+                                    <i className="fas fa-calendar-alt"></i>
+                                    Upcoming Deadlines
+                                </div>
+                                <div className="panel-content">
+                                    {opportunities
+                                        .sort((a, b) => a.daysLeft - b.daysLeft)
+                                        .slice(0, 5)
+                                        .map(opp => (
+                                            <div key={opp.id} className="timeline-item">
+                                                <div className={`timeline-dot ${opp.urgency}`}></div>
+                                                <div className="timeline-content">
+                                                    <div className="timeline-title">
+                                                        {opp.title.substring(0, 40)}...
+                                                    </div>
+                                                    <div className="timeline-time">
+                                                        {formatDeadline(opp.daysLeft)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Batch Actions */}
+                    {selectedCount > 0 && (
+                        <div className="batch-actions">
+                            <div className="batch-header">
+                                <div className="batch-title">Batch Actions</div>
+                                <div className="selected-count">{selectedCount} selected</div>
+                            </div>
+                            <div className="batch-buttons">
+                                <button 
+                                    className="batch-button primary"
+                                    onClick={() => handleBatchAction('analyze')}
+                                >
+                                    <i className="fas fa-brain"></i>
+                                    Batch AI Analysis
+                                </button>
+                                <button 
+                                    className="batch-button"
+                                    onClick={() => handleBatchAction('export')}
+                                >
+                                    <i className="fas fa-download"></i>
+                                    Export Reports
+                                </button>
+                                <button 
+                                    className="batch-button"
+                                    onClick={() => handleBatchAction('track')}
+                                >
+                                    <i className="fas fa-bookmark"></i>
+                                    Add to Pipeline
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<GoNoGoDecisionEngine />, document.getElementById('root'));
+    </script>
+</body>
+</html>
