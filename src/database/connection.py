@@ -3,10 +3,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-# Use PostgreSQL from environment variable
+# Use SQLite for local testing, PostgreSQL for production
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql://kbi_user:your_postgres_password_here@kbi_postgres:5432/kbi_labs"
+    "sqlite:///./kbi_labs.db"  # Local SQLite fallback
 )
 
 # Create engine with PostgreSQL

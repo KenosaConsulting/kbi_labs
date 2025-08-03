@@ -147,20 +147,25 @@ jobs:
           fi
           
           # Install dependencies
-          python3 -m pip install --user -r requirements.txt
-          python3 -m pip install --user -r requirements-ai.txt
+          python3 -m pip install --user -r requirements-production.txt || python3 -m pip install --user -r requirements.txt
           
-          # Kill existing process
-          pkill -f "uvicorn src.main:app" || true
+          # Kill existing processes
+          pkill -f "uvicorn" || true
+          pkill -f "python3.*8000" || true
+          sleep 5
           
-          # Start API with environment variables
-          nohup python3 -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload > api.log 2>&1 &
+          # Set environment variables for production
+          export DATABASE_URL="sqlite:///./kbi_production.db"
           
-          # Wait and test
-          sleep 10
+          # Start our specific FastAPI application
+          nohup python3 -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload > kbi_api.log 2>&1 &
+          
+          # Wait and test our specific application
+          sleep 15
           curl -f http://localhost:8000/health || exit 1
+          curl -f http://localhost:8000/api/ai/status || echo "Warning: AI endpoint not ready yet"
           
-          echo "✅ Deployment successful!"
+          echo "✅ KBI Labs FastAPI deployment successful!"
         EOF
         
         # Cleanup

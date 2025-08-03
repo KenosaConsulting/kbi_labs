@@ -1,0 +1,36 @@
+# KBI Labs Production Requirements
+# Core FastAPI and API dependencies
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+python-multipart==0.0.20
+pydantic==2.11.7
+starlette==0.47.2
+
+# Database
+sqlalchemy==2.0.42
+psycopg2-binary==2.9.7
+
+# AI/ML Dependencies
+pandas==2.3.1
+numpy==2.3.2
+scikit-learn==1.7.1
+joblib==1.5.1
+
+# HTTP and async
+aiohttp==3.12.14
+httpx==0.28.0
+requests==2.31.0
+
+# Security and auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.20
+
+# Environment and config
+python-dotenv==1.0.0
+
+# Caching (optional)
+redis==5.0.1
+
+# Development and production utilities
+gunicorn==21.2.0
