@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBI Labs - API Integration Test</title>
+    <script src="api-service.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #334155;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .test-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status.loading {
+            background: #fbbf24;
+            color: white;
+        }
+        .status.success {
+            background: #10b981;
+            color: white;
+        }
+        .status.error {
+            background: #ef4444;
+            color: white;
+        }
+        .data-preview {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .summary-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border-left: 4px solid #3b82f6;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .summary-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <i class="fas fa-chart-network"></i>
+            KBI Labs API Integration Test
+        </h1>
+        <p>Testing real-time data integration with government APIs</p>
+
+        <div class="summary" id="summary">
+            <div class="summary-card">
+                <div class="summary-value" id="total-tests">0</div>
+                <div class="summary-label">Total Tests</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value" id="passed-tests">0</div>
+                <div class="summary-label">Passed</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value" id="failed-tests">0</div>
+                <div class="summary-label">Failed</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value" id="data-points">0</div>
+                <div class="summary-label">Data Points</div>
+            </div>
+        </div>
+
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        class IntegrationTester {
+            constructor() {
+                this.results = [];
+                this.totalDataPoints = 0;
+            }
+
+            async runAllTests() {
+                const tests = [
+                    { name: 'Health Check', fn: () => window.kbiAPI.getHealthStatus() },
+                    { name: 'Procurement Opportunities', fn: () => window.kbiAPI.getProcurementOpportunities() },
+                    { name: 'Regulatory Intelligence', fn: () => window.kbiAPI.getRegulatoryIntelligence() },
+                    { name: 'Congressional Intelligence', fn: () => window.kbiAPI.getCongressionalIntelligence() },
+                    { name: 'Contractor Dashboard', fn: () => window.kbiAPI.getContractorDashboard() },
+                    { name: 'Comprehensive Intelligence', fn: () => window.kbiAPI.getComprehensiveIntelligence() },
+                    { name: 'Enhanced GSA Intelligence', fn: () => window.kbiAPI.getEnhancedGSAIntelligence() },
+                    { name: 'GovInfo Intelligence', fn: () => window.kbiAPI.getGovInfoIntelligence() }
+                ];
+
+                for (let test of tests) {
+                    await this.runTest(test.name, test.fn);
+                }
+
+                this.updateSummary();
+            }
+
+            async runTest(name, testFn) {
+                const container = document.getElementById('test-results');
+                const testCard = document.createElement('div');
+                testCard.className = 'test-card';
+                testCard.innerHTML = `
+                    <div class="test-header">
+                        <h3>${name}</h3>
+                        <span class="status loading">Testing...</span>
+                    </div>
+                    <div class="data-preview">Loading...</div>
+                `;
+                container.appendChild(testCard);
+
+                const statusEl = testCard.querySelector('.status');
+                const dataEl = testCard.querySelector('.data-preview');
+
+                try {
+                    const startTime = Date.now();
+                    const result = await testFn();
+                    const endTime = Date.now();
+                    const duration = endTime - startTime;
+
+                    if (result && result.status === 'success') {
+                        statusEl.textContent = `Success (${duration}ms)`;
+                        statusEl.className = 'status success';
+                        
+                        // Count data points
+                        const dataCount = this.countDataPoints(result.data);
+                        this.totalDataPoints += dataCount;
+                        
+                        dataEl.innerHTML = `
+                            <strong>Data Points:</strong> ${dataCount}<br>
+                            <strong>Response Time:</strong> ${duration}ms<br>
+                            <strong>Sample Data:</strong><br>
+                            <pre>${JSON.stringify(result.data, null, 2).substring(0, 500)}...</pre>
+                        `;
+                        
+                        this.results.push({ name, status: 'success', duration, dataCount });
+                    } else {
+                        throw new Error('Invalid response format');
+                    }
+                } catch (error) {
+                    statusEl.textContent = `Failed: ${error.message}`;
+                    statusEl.className = 'status error';
+                    dataEl.textContent = `Error: ${error.message}`;
+                    this.results.push({ name, status: 'error', error: error.message });
+                }
+            }
+
+            countDataPoints(data) {
+                if (!data) return 0;
+                if (Array.isArray(data)) return data.length;
+                if (typeof data === 'object') {
+                    let count = 0;
+                    for (let key in data) {
+                        if (Array.isArray(data[key])) {
+                            count += data[key].length;
+                        } else if (typeof data[key] === 'object') {
+                            count += this.countDataPoints(data[key]);
+                        } else {
+                            count += 1;
+                        }
+                    }
+                    return count;
+                }
+                return 1;
+            }
+
+            updateSummary() {
+                const totalTests = this.results.length;
+                const passedTests = this.results.filter(r => r.status === 'success').length;
+                const failedTests = totalTests - passedTests;
+
+                document.getElementById('total-tests').textContent = totalTests;
+                document.getElementById('passed-tests').textContent = passedTests;
+                document.getElementById('failed-tests').textContent = failedTests;
+                document.getElementById('data-points').textContent = this.totalDataPoints.toLocaleString();
+            }
+        }
+
+        // Start tests when page loads
+        window.addEventListener('load', async () => {
+            // Wait for API service to be ready
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const tester = new IntegrationTester();
+            await tester.runAllTests();
+            
+            console.log('Integration test completed:', tester.results);
+        });
+    </script>
+</body>
+</html>
