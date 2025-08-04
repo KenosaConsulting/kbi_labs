@@ -11,6 +11,7 @@ import CompanyDetails from './pages/CompanyDetails';
 import Analytics from './pages/Analytics';
 import MarketIntelligence from './pages/MarketIntelligence';
 import GovernmentContractorDashboard from './pages/GovernmentContractorDashboard';
+import UnifiedIntelligence from './pages/UnifiedIntelligence';
 import SimpleTest from './pages/SimpleTest';
 
 // Styles
@@ -86,6 +87,16 @@ const Navigation = () => {
               >
                 GovCon Dashboard
               </button>
+              <button
+                onClick={() => handleNavigation('unified', '/unified-intelligence')}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  currentView === 'unified'
+                    ? 'border-indigo-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                Unified Intelligence
+              </button>
             </div>
           </div>
         </div>
@@ -111,6 +122,7 @@ function App() {
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/market" element={<MarketIntelligence />} />
                 <Route path="/government-contractor" element={<GovernmentContractorDashboard />} />
+                <Route path="/unified-intelligence" element={<UnifiedIntelligence />} />
                 <Route path="/test" element={<SimpleTest />} />
               </Routes>
             </main>
