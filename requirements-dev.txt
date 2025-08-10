@@ -1,0 +1,87 @@
+# KBI Labs - Development Environment
+# Enhanced development tools and Phase 2 AI/ML capabilities
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+
+# ============================================================================
+# BASE REQUIREMENTS
+# ============================================================================
+-r requirements.txt
+
+# ============================================================================
+# PHASE 2: AI/ML INTEGRATION
+# ============================================================================
+# Core ML/AI
+scikit-learn==1.7.1
+joblib==1.5.1
+tensorflow>=2.13.0              # Deep learning (optional)
+torch>=2.1.0                    # PyTorch (optional)
+transformers>=4.30.0            # HuggingFace transformers
+
+# AI Services
+openai>=1.0.0
+anthropic>=0.7.0
+langchain>=0.1.0
+pinecone-client>=2.2.0
+
+# ============================================================================
+# ADVANCED DATA PROCESSING
+# ============================================================================
+streamlit>=1.25.0               # Interactive dashboards
+plotly>=5.15.0                  # Advanced visualizations
+dash>=2.10.0                    # Web apps
+jupyter>=1.0.0                  # Jupyter notebooks
+notebook>=7.0.0
+
+# Data Processing
+celery>=5.3.0                   # Task queue
+redis>=5.0.0                    # Message broker/cache
+
+# ============================================================================
+# DEVELOPMENT TOOLS
+# ============================================================================
+# Code Quality
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+isort>=5.12.0
+pre-commit>=3.3.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+httpx>=0.24.0                   # HTTP testing client
+factory-boy>=3.3.0              # Test data generation
+
+# Development Server
+watchdog>=3.0.0                 # File watching
+python-multipart>=0.0.20
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.0.0
+
+# ============================================================================
+# MONITORING & DEBUGGING
+# ============================================================================
+# Logging and monitoring
+structlog>=23.1.0
+prometheus-client>=0.17.0
+
+# Performance profiling
+memory-profiler>=0.61.0
+py-spy>=0.3.14
+
+# ============================================================================
+# DATABASE TOOLS
+# ============================================================================
+alembic>=1.12.0                 # Database migrations
+pgcli>=3.5.0                    # PostgreSQL CLI (optional)
+
+# ============================================================================
+# OPTIONAL: PRODUCTION TOOLS
+# ============================================================================
+# Uncomment for production deployment testing
+# gunicorn>=21.2.0
+# docker>=6.1.0
+# kubernetes>=27.2.0
