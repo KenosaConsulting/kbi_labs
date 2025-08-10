@@ -24,11 +24,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends, Query, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 import logging
 import json
 import uuid
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi import Request
 
 # Setup logging
 logging.basicConfig(
@@ -54,17 +59,38 @@ src_path = project_root / "src"
 
 sys.path.extend([str(backend_path), str(src_path)])
 
+# Import authentication components
+from backend.auth.middleware import (
+    get_current_active_user, get_optional_user, require_admin, 
+    require_analyst, require_user, check_rate_limit
+)
+from backend.auth.routes import router as auth_router
+
+# Import monitoring and caching
+from backend.monitoring.metrics import (
+    metrics_collector, metrics_middleware, metrics_endpoint, enhanced_health_check
+)
+from backend.cache.redis_client import cache
+
 # ============================================================================
 # PYDANTIC MODELS
 # ============================================================================
 
 class EnrichmentRequest(BaseModel):
-    agency_code: str
-    agency_name: Optional[str] = None
-    data_types: List[str] = ["budget", "personnel", "contracts", "organizational"]
-    enrichment_depth: str = "standard"
-    priority: str = "normal"
-    user_id: Optional[str] = None
+    agency_code: str = Field(..., min_length=3, max_length=10, regex=r'^[0-9A-Z]+$')
+    agency_name: Optional[str] = Field(None, min_length=1, max_length=200)
+    data_types: List[str] = Field(["budget", "personnel", "contracts", "organizational"], min_items=1, max_items=10)
+    enrichment_depth: str = Field("standard", regex=r'^(basic|standard|comprehensive)$')
+    priority: str = Field("normal", regex=r'^(low|normal|high|urgent)$')
+    user_id: Optional[str] = Field(None, max_length=100)
+    
+    @validator('data_types')
+    def validate_data_types(cls, v):
+        valid_types = {"budget", "personnel", "contracts", "organizational"}
+        invalid_types = set(v) - valid_types
+        if invalid_types:
+            raise ValueError(f'Invalid data types: {invalid_types}. Valid types: {valid_types}')
+        return v
 
 class EnrichmentResponse(BaseModel):
     success: bool
@@ -85,12 +111,18 @@ async def get_db_connection():
         return await aiosqlite.connect("test_kbi_labs.db")
     else:
         # Use PostgreSQL for development/production
+        # Require all database credentials to be properly configured
+        required_env_vars = ["DATABASE_HOST", "DATABASE_NAME", "DATABASE_USER", "DATABASE_PASSWORD"]
+        for var in required_env_vars:
+            if not os.getenv(var):
+                raise ValueError(f"Required environment variable {var} not set for database connection")
+        
         return await asyncpg.connect(
-            host=os.getenv("DATABASE_HOST", "localhost"),
-            port=int(os.getenv("DATABASE_PORT", 5432)),
-            database=os.getenv("DATABASE_NAME", "kbi_labs"),
-            user=os.getenv("DATABASE_USER", "kbi_user"),
-            password=os.getenv("DATABASE_PASSWORD", "kbi_password")
+            host=os.getenv("DATABASE_HOST"),
+            port=int(os.getenv("DATABASE_PORT", "5432")),
+            database=os.getenv("DATABASE_NAME"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD")
         )
 
 # ============================================================================
@@ -128,19 +160,62 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if not IS_PRODUCTION else None
     )
 
-    # CORS middleware
+    # Security middleware - Trusted Host
+    if IS_PRODUCTION:
+        allowed_hosts = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
+
+    # CORS middleware with secure defaults
+    allowed_origins = ["*"] if IS_DEVELOPMENT else os.getenv("ALLOWED_ORIGINS", "https://localhost:3000").split(",")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"] if IS_DEVELOPMENT else os.getenv("ALLOWED_ORIGINS", "").split(","),
+        allow_origins=allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
+        allow_headers=["Authorization", "Content-Type"],
     )
+    
+    # Rate limiting setup
+    limiter = Limiter(key_func=get_remote_address)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    
+    # Add metrics middleware
+    app.middleware("http")(metrics_middleware)
+    
+    # Include authentication routes
+    app.include_router(auth_router)
     
     return app
 
-# Create app instance
+# Application lifecycle management
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info(f"Starting KBI Labs Intelligence Platform - {ENVIRONMENT} mode")
+    await cache.connect()
+    await metrics_collector.start_background_tasks()
+    yield
+    # Shutdown
+    logger.info("Shutting down KBI Labs Intelligence Platform")
+    await cache.disconnect()
+    await metrics_collector.stop_background_tasks()
+
+# Create app instance with lifespan management
 app = create_app()
+app.router.lifespan_context = lifespan
+
+# Get limiter instance for route decorators
+limiter = app.state.limiter
+
+# ============================================================================
+# MONITORING ENDPOINTS
+# ============================================================================
+
+@app.get("/metrics")
+async def get_metrics():
+    """Prometheus metrics endpoint"""
+    return await metrics_endpoint()
 
 # ============================================================================
 # CORE ENDPOINTS
@@ -148,8 +223,11 @@ app = create_app()
 
 @app.get("/health")
 async def health_check():
-    """Comprehensive health check with environment-specific tests"""
+    """Comprehensive health check with environment-specific tests and OpenAI API validation"""
     try:
+        health_status = "healthy"
+        services = {}
+        
         # Database connection test
         if IS_TEST_MODE:
             db_status = "sqlite-ready"
@@ -161,25 +239,79 @@ async def health_check():
                 await conn.close()
                 db_status = "connected"
                 db_connected = True
-            except Exception:
-                db_status = "disconnected"
+            except Exception as db_error:
+                db_status = f"disconnected: {str(db_error)}"
                 db_connected = False
+                health_status = "degraded"
         
-        return {
-            "status": "healthy" if db_connected else "degraded",
+        services["database"] = db_status
+        
+        # OpenAI API health check (as specified by GPT-5)
+        openai_status = "unavailable"
+        openai_connected = False
+        
+        try:
+            # Test OpenAI API connectivity if key is available
+            openai_key = os.getenv("OPENAI_API_KEY")
+            if openai_key:
+                from openai import OpenAI
+                client = OpenAI(api_key=openai_key)
+                
+                # Quick test call to validate API key and connectivity
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": "health check"}],
+                    max_tokens=1
+                )
+                openai_status = "connected"
+                openai_connected = True
+            else:
+                openai_status = "no-api-key"
+                
+        except Exception as openai_error:
+            openai_status = f"error: {str(openai_error)}"
+            health_status = "degraded"
+            
+        services["openai_api"] = openai_status
+        
+        # System health check
+        services["enrichment_system"] = "available"
+        services["api_server"] = "running"
+        
+        # Overall health determination
+        if not db_connected and not openai_connected:
+            health_status = "unhealthy"
+        elif not db_connected or not openai_connected:
+            health_status = "degraded"
+            
+        response_data = {
+            "status": health_status,
             "service": "kbi-labs-platform",
             "version": "2.0.0",
             "environment": ENVIRONMENT,
-            "database": db_status,
-            "enrichment_system": True,
+            "services": services,
             "timestamp": datetime.now().isoformat()
         }
+        
+        # Return appropriate HTTP status code based on health
+        if health_status == "unhealthy":
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=response_data)
+        
+        return response_data
+        
     except Exception as e:
-        return {
+        error_response = {
             "status": "unhealthy",
+            "service": "kbi-labs-platform", 
             "error": str(e),
-            "environment": ENVIRONMENT
+            "environment": ENVIRONMENT,
+            "timestamp": datetime.now().isoformat()
         }
+        
+        # Return 500 status for unhealthy service as specified
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail=error_response)
 
 @app.get("/")
 async def root():
@@ -210,7 +342,11 @@ async def root():
 # ============================================================================
 
 @app.get("/api/data-enrichment/agencies")
-async def get_supported_agencies():
+@limiter.limit("30/minute")
+async def get_supported_agencies(
+    request: Request,
+    current_user: Optional[Dict[str, Any]] = Depends(get_optional_user)
+):
     """Get list of supported government agencies"""
     agencies = [
         {"code": "9700", "name": "Department of Defense", "category": "Defense"},
@@ -231,7 +367,11 @@ async def get_supported_agencies():
     }
 
 @app.get("/api/data-enrichment/data-types")
-async def get_supported_data_types():
+@limiter.limit("30/minute")
+async def get_supported_data_types(
+    request: Request,
+    current_user: Optional[Dict[str, Any]] = Depends(get_optional_user)
+):
     """Get supported enrichment data types"""
     data_types = [
         {
@@ -263,7 +403,12 @@ async def get_supported_data_types():
     }
 
 @app.post("/api/data-enrichment/enrich", response_model=EnrichmentResponse)
-async def request_agency_enrichment(request: EnrichmentRequest):
+@limiter.limit("10/minute")
+async def request_agency_enrichment(
+    enrichment_request: EnrichmentRequest,
+    request: Request,
+    current_user: Dict[str, Any] = Depends(require_user)
+):
     """Submit agency enrichment request"""
     try:
         job_id = str(uuid.uuid4())

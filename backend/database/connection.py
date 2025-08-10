@@ -28,13 +28,18 @@ async def create_database_pool() -> asyncpg.Pool:
     if _connection_pool is not None:
         return _connection_pool
     
-    # Get database configuration from environment
+    # Get database configuration from environment - require all credentials
+    required_env_vars = ['DATABASE_HOST', 'DATABASE_NAME', 'DATABASE_USER', 'DATABASE_PASSWORD']
+    for var in required_env_vars:
+        if not os.getenv(var):
+            raise ValueError(f"Required environment variable {var} not set for database connection")
+    
     database_config = {
-        'host': os.getenv('DATABASE_HOST', 'localhost'),
+        'host': os.getenv('DATABASE_HOST'),
         'port': int(os.getenv('DATABASE_PORT', '5432')),
-        'database': os.getenv('DATABASE_NAME', 'kbi_labs'),
-        'user': os.getenv('DATABASE_USER', 'postgres'),
-        'password': os.getenv('DATABASE_PASSWORD', 'password'),
+        'database': os.getenv('DATABASE_NAME'),
+        'user': os.getenv('DATABASE_USER'),
+        'password': os.getenv('DATABASE_PASSWORD'),
     }
     
     # Connection pool configuration

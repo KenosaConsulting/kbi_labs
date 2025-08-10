@@ -1,0 +1,26 @@
+[bandit]
+# Bandit security scanner configuration
+
+# Directories to scan
+targets = main_server.py,backend/
+
+# Directories to exclude  
+exclude_dirs = tests/,venv/,node_modules/,.git/
+
+# Test IDs to skip (if any false positives)
+# skips = B101,B601
+
+# Test IDs to include (leave empty to run all)
+tests = 
+
+# Severity levels: LOW, MEDIUM, HIGH
+severity = MEDIUM,HIGH
+
+# Confidence levels: LOW, MEDIUM, HIGH  
+confidence = MEDIUM,HIGH
+
+# Output format: csv, custom, html, json, screen, txt, xml, yaml
+format = json
+
+# Output file
+output = security-report.json
