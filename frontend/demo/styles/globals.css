@@ -1,0 +1,240 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables for Jarvis Theme */
+:root {
+  /* Jarvis Colors */
+  --jarvis-blue: #00D4FF;
+  --stark-navy: #0A1628;
+  --arc-reactor: #00B4D8;
+  
+  /* Interface Colors */
+  --critical-alert: #FF6B6B;
+  --opportunity: #4ECDC4;
+  --warning: #FFE66D;
+  --success: #A8E6CF;
+  
+  /* Neutral Colors */
+  --background: #0F172A;
+  --surface: #1E293B;
+  --surface-light: #334155;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  
+  /* Gradients */
+  --gradient-jarvis: linear-gradient(135deg, #00D4FF 0%, #00B4D8 100%);
+  --gradient-surface: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+}
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-stark-900 text-stark-100;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-stark-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-stark-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-jarvis-500;
+}
+
+/* Typography */
+.text-jarvis-glow {
+  color: var(--jarvis-blue);
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+/* Components */
+@layer components {
+  /* Jarvis Panel Styles */
+  .jarvis-panel {
+    @apply bg-stark-800/50 backdrop-blur-sm border border-stark-700/50 rounded-lg;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.4) 100%);
+  }
+  
+  .jarvis-panel-glow {
+    @apply jarvis-panel shadow-jarvis;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+  }
+  
+  /* Button Styles */
+  .btn-jarvis {
+    @apply bg-jarvis-500 hover:bg-jarvis-400 text-stark-900 font-semibold px-4 py-2 rounded-lg transition-all duration-200;
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+  }
+  
+  .btn-jarvis:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0, 212, 255, 0.4);
+  }
+  
+  .btn-secondary {
+    @apply bg-stark-700 hover:bg-stark-600 text-stark-100 font-medium px-4 py-2 rounded-lg transition-all duration-200;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent hover:bg-stark-800/50 text-stark-300 hover:text-stark-100 font-medium px-4 py-2 rounded-lg transition-all duration-200;
+  }
+  
+  /* Alert Styles */
+  .alert-critical {
+    @apply bg-red-500/20 border-l-4 border-red-500 text-red-100 p-4 rounded;
+  }
+  
+  .alert-opportunity {
+    @apply bg-green-500/20 border-l-4 border-green-500 text-green-100 p-4 rounded;
+  }
+  
+  .alert-warning {
+    @apply bg-yellow-500/20 border-l-4 border-yellow-500 text-yellow-100 p-4 rounded;
+  }
+  
+  .alert-info {
+    @apply bg-blue-500/20 border-l-4 border-blue-500 text-blue-100 p-4 rounded;
+  }
+  
+  /* Input Styles */
+  .input-jarvis {
+    @apply bg-stark-800/50 border border-stark-600 rounded-lg px-3 py-2 text-stark-100 placeholder-stark-400;
+    @apply focus:outline-none focus:ring-2 focus:ring-jarvis-500/50 focus:border-jarvis-500;
+  }
+  
+  /* Card Styles */
+  .intelligence-card {
+    @apply jarvis-panel p-6 hover:shadow-jarvis transition-all duration-300;
+  }
+  
+  .intelligence-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  /* Metric Styles */
+  .metric-positive {
+    @apply text-green-400;
+  }
+  
+  .metric-negative {
+    @apply text-red-400;
+  }
+  
+  .metric-neutral {
+    @apply text-stark-300;
+  }
+  
+  /* Loading Animations */
+  .loading-pulse {
+    @apply animate-pulse bg-stark-700/50 rounded;
+  }
+  
+  .loading-spinner {
+    @apply animate-spin rounded-full border-2 border-stark-600 border-t-jarvis-500;
+  }
+  
+  /* Grid Layouts */
+  .intelligence-grid {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+  
+  .dashboard-grid {
+    @apply grid gap-6;
+    grid-template-areas: 
+      "alerts alerts alerts"
+      "insights insights pipeline"
+      "market competitive advisory";
+  }
+  
+  @screen lg {
+    .dashboard-grid {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+  
+  /* Confidence Indicators */
+  .confidence-high {
+    @apply text-green-400 bg-green-400/20;
+  }
+  
+  .confidence-medium {
+    @apply text-yellow-400 bg-yellow-400/20;
+  }
+  
+  .confidence-low {
+    @apply text-red-400 bg-red-400/20;
+  }
+}
+
+/* Utilities */
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  .backdrop-blur-xs {
+    backdrop-filter: blur(2px);
+  }
+  
+  .gradient-text {
+    background: linear-gradient(135deg, #00D4FF 0%, #00B4D8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Responsive Design Helpers */
+.mobile-hidden {
+  @apply hidden sm:block;
+}
+
+.desktop-hidden {
+  @apply block sm:hidden;
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.jarvis-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .jarvis-panel {
+    border: 1px solid #ccc !important;
+    background: white !important;
+  }
+}
