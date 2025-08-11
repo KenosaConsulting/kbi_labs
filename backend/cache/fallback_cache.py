@@ -1,131 +1,93 @@
 #!/usr/bin/env python3
 """
-Redis Cache Client
-High-performance caching layer with automatic serialization and compression
+Fallback Cache Client - In-memory cache when Redis is not available
+Compatible with Python 3.13+
 """
 
 import json
-import gzip
 import logging
 import os
-from typing import Any, Optional, Dict, List, Union
-from datetime import timedelta
-import pickle
+import time
 import hashlib
-
-# Skip Redis for Python 3.13 compatibility issues - use fallback cache
-REDIS_AVAILABLE = False
-from .fallback_cache import FallbackCache
+from typing import Any, Optional, Dict, List, Union
+from datetime import datetime, timedelta
+import threading
 
 logger = logging.getLogger(__name__)
 
-class RedisCache:
+class FallbackCache:
     """
-    Redis cache client with intelligent caching strategies
+    In-memory cache client for when Redis is not available
     """
     
     def __init__(self):
-        self.redis_client: Optional[aioredis.Redis] = None
+        self.cache_data: Dict[str, Dict[str, Any]] = {}
         self.default_ttl = int(os.getenv("CACHE_TTL_SECONDS", "3600"))  # 1 hour
         self.ml_cache_ttl = int(os.getenv("ML_CACHE_TTL_SECONDS", "86400"))  # 24 hours
-        self.compression_enabled = True
-        self.compression_threshold = 1024  # Compress data larger than 1KB
+        self._lock = threading.RLock()
+        self.connected = False
     
     async def connect(self) -> None:
-        """Initialize Redis connection"""
+        """Initialize cache connection"""
         try:
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-            
-            # Parse Redis URL for connection parameters
-            self.redis_client = await aioredis.from_url(
-                redis_url,
-                encoding="utf-8",
-                decode_responses=False,  # We handle encoding ourselves for compression
-                retry_on_timeout=True,
-                socket_keepalive=True,
-                socket_keepalive_options={},
-                health_check_interval=30
-            )
-            
-            # Test connection
-            await self.redis_client.ping()
-            logger.info("Redis cache connected successfully")
-            
+            logger.info("Using in-memory fallback cache (Redis not available)")
+            self.connected = True
         except Exception as e:
-            logger.warning(f"Redis connection failed: {e}. Falling back to in-memory cache")
-            self.redis_client = None
+            logger.error(f"Cache initialization failed: {e}")
     
     async def disconnect(self) -> None:
-        """Close Redis connection"""
-        if self.redis_client:
-            await self.redis_client.close()
-            logger.info("Redis connection closed")
+        """Close cache connection"""
+        with self._lock:
+            self.cache_data.clear()
+            self.connected = False
+            logger.info("Fallback cache disconnected")
     
     def _generate_cache_key(self, prefix: str, identifier: Union[str, Dict[str, Any]]) -> str:
         """Generate consistent cache key"""
         if isinstance(identifier, dict):
-            # Create consistent hash from dictionary
             sorted_items = sorted(identifier.items())
             identifier_str = json.dumps(sorted_items, sort_keys=True)
         else:
             identifier_str = str(identifier)
         
-        # Generate hash for long keys
         key_hash = hashlib.md5(identifier_str.encode()).hexdigest()
         return f"kbi:{prefix}:{key_hash}"
     
-    def _serialize_data(self, data: Any) -> bytes:
-        """Serialize data with optional compression"""
-        try:
-            # Use pickle for complex Python objects, JSON for simple types
-            if isinstance(data, (dict, list, str, int, float, bool, type(None))):
-                serialized = json.dumps(data).encode('utf-8')
-            else:
-                serialized = pickle.dumps(data)
-            
-            # Compress if data is large enough
-            if self.compression_enabled and len(serialized) > self.compression_threshold:
-                compressed = gzip.compress(serialized)
-                # Add compression marker
-                return b"GZIP:" + compressed
-            
-            return serialized
-            
-        except Exception as e:
-            logger.error(f"Data serialization error: {e}")
-            return pickle.dumps(data)  # Fallback to pickle
+    def _is_expired(self, expiry_time: float) -> bool:
+        """Check if cache entry has expired"""
+        return time.time() > expiry_time
     
-    def _deserialize_data(self, data: bytes) -> Any:
-        """Deserialize data with optional decompression"""
-        try:
-            # Check for compression marker
-            if data.startswith(b"GZIP:"):
-                compressed_data = data[5:]  # Remove "GZIP:" prefix
-                decompressed = gzip.decompress(compressed_data)
-                data = decompressed
-            
-            # Try JSON first (more common and faster)
-            try:
-                return json.loads(data.decode('utf-8'))
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                # Fallback to pickle
-                return pickle.loads(data)
-                
-        except Exception as e:
-            logger.error(f"Data deserialization error: {e}")
-            return None
+    def _cleanup_expired(self) -> None:
+        """Remove expired entries"""
+        current_time = time.time()
+        expired_keys = []
+        
+        for key, entry in self.cache_data.items():
+            if current_time > entry['expires_at']:
+                expired_keys.append(key)
+        
+        for key in expired_keys:
+            del self.cache_data[key]
     
     async def get(self, key: str, prefix: str = "general") -> Optional[Any]:
         """Get cached value"""
-        if not self.redis_client:
+        if not self.connected:
             return None
         
         try:
             cache_key = self._generate_cache_key(prefix, key)
-            cached_data = await self.redis_client.get(cache_key)
             
-            if cached_data:
-                return self._deserialize_data(cached_data)
+            with self._lock:
+                # Clean up expired entries periodically
+                if len(self.cache_data) % 100 == 0:
+                    self._cleanup_expired()
+                
+                entry = self.cache_data.get(cache_key)
+                if entry and not self._is_expired(entry['expires_at']):
+                    return entry['value']
+                elif entry:
+                    # Remove expired entry
+                    del self.cache_data[cache_key]
             
             return None
             
@@ -141,16 +103,21 @@ class RedisCache:
         prefix: str = "general"
     ) -> bool:
         """Set cached value"""
-        if not self.redis_client:
+        if not self.connected:
             return False
         
         try:
             cache_key = self._generate_cache_key(prefix, key)
-            serialized_value = self._serialize_data(value)
-            
             ttl = ttl or self.default_ttl
+            expires_at = time.time() + ttl
             
-            await self.redis_client.setex(cache_key, ttl, serialized_value)
+            with self._lock:
+                self.cache_data[cache_key] = {
+                    'value': value,
+                    'expires_at': expires_at,
+                    'created_at': time.time()
+                }
+            
             return True
             
         except Exception as e:
@@ -159,13 +126,18 @@ class RedisCache:
     
     async def delete(self, key: str, prefix: str = "general") -> bool:
         """Delete cached value"""
-        if not self.redis_client:
+        if not self.connected:
             return False
         
         try:
             cache_key = self._generate_cache_key(prefix, key)
-            result = await self.redis_client.delete(cache_key)
-            return result > 0
+            
+            with self._lock:
+                if cache_key in self.cache_data:
+                    del self.cache_data[cache_key]
+                    return True
+            
+            return False
             
         except Exception as e:
             logger.error(f"Cache delete error for key {key}: {e}")
@@ -173,13 +145,15 @@ class RedisCache:
     
     async def exists(self, key: str, prefix: str = "general") -> bool:
         """Check if key exists in cache"""
-        if not self.redis_client:
+        if not self.connected:
             return False
         
         try:
             cache_key = self._generate_cache_key(prefix, key)
-            result = await self.redis_client.exists(cache_key)
-            return result > 0
+            
+            with self._lock:
+                entry = self.cache_data.get(cache_key)
+                return entry is not None and not self._is_expired(entry['expires_at'])
             
         except Exception as e:
             logger.error(f"Cache exists error for key {key}: {e}")
@@ -187,13 +161,19 @@ class RedisCache:
     
     async def get_ttl(self, key: str, prefix: str = "general") -> Optional[int]:
         """Get remaining TTL for key"""
-        if not self.redis_client:
+        if not self.connected:
             return None
         
         try:
             cache_key = self._generate_cache_key(prefix, key)
-            ttl = await self.redis_client.ttl(cache_key)
-            return ttl if ttl > 0 else None
+            
+            with self._lock:
+                entry = self.cache_data.get(cache_key)
+                if entry and not self._is_expired(entry['expires_at']):
+                    remaining = int(entry['expires_at'] - time.time())
+                    return remaining if remaining > 0 else 0
+            
+            return None
             
         except Exception as e:
             logger.error(f"Cache TTL error for key {key}: {e}")
@@ -201,19 +181,23 @@ class RedisCache:
     
     async def clear_pattern(self, pattern: str, prefix: str = "general") -> int:
         """Clear all keys matching pattern"""
-        if not self.redis_client:
+        if not self.connected:
             return 0
         
         try:
-            search_pattern = f"kbi:{prefix}:{pattern}"
-            keys = await self.redis_client.keys(search_pattern)
+            search_prefix = f"kbi:{prefix}:"
+            matching_keys = []
             
-            if keys:
-                result = await self.redis_client.delete(*keys)
-                logger.info(f"Cleared {result} cache keys matching pattern: {pattern}")
-                return result
+            with self._lock:
+                for key in self.cache_data.keys():
+                    if key.startswith(search_prefix) and pattern in key:
+                        matching_keys.append(key)
+                
+                for key in matching_keys:
+                    del self.cache_data[key]
             
-            return 0
+            logger.info(f"Cleared {len(matching_keys)} cache keys matching pattern: {pattern}")
+            return len(matching_keys)
             
         except Exception as e:
             logger.error(f"Cache clear pattern error: {e}")
@@ -221,34 +205,31 @@ class RedisCache:
     
     async def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
-        if not self.redis_client:
+        if not self.connected:
             return {"status": "disconnected"}
         
         try:
-            info = await self.redis_client.info()
+            with self._lock:
+                total_entries = len(self.cache_data)
+                expired_count = 0
+                current_time = time.time()
+                
+                for entry in self.cache_data.values():
+                    if current_time > entry['expires_at']:
+                        expired_count += 1
             
             return {
                 "status": "connected",
-                "redis_version": info.get("redis_version"),
-                "used_memory": info.get("used_memory_human"),
-                "connected_clients": info.get("connected_clients"),
-                "total_commands_processed": info.get("total_commands_processed"),
-                "keyspace_hits": info.get("keyspace_hits", 0),
-                "keyspace_misses": info.get("keyspace_misses", 0),
-                "hit_rate": self._calculate_hit_rate(
-                    info.get("keyspace_hits", 0),
-                    info.get("keyspace_misses", 0)
-                )
+                "cache_type": "in-memory",
+                "total_entries": total_entries,
+                "expired_entries": expired_count,
+                "active_entries": total_entries - expired_count,
+                "memory_usage": "N/A (in-memory)",
             }
             
         except Exception as e:
             logger.error(f"Cache stats error: {e}")
             return {"status": "error", "error": str(e)}
-    
-    def _calculate_hit_rate(self, hits: int, misses: int) -> float:
-        """Calculate cache hit rate percentage"""
-        total = hits + misses
-        return (hits / total * 100) if total > 0 else 0.0
     
     # Specialized caching methods
     
@@ -299,12 +280,8 @@ class RedisCache:
         key = f"{endpoint}:{params}"
         return await self.get(key, "api_responses")
 
-# Global cache instance - use Redis if available, otherwise fallback
-if REDIS_AVAILABLE:
-    cache = RedisCache()
-else:
-    logger.warning("Redis not available, using fallback in-memory cache")
-    cache = FallbackCache()
+# Global cache instance
+cache = FallbackCache()
 
 # Decorator for automatic caching
 def cached(ttl: int = 3600, prefix: str = "general"):
@@ -312,9 +289,6 @@ def cached(ttl: int = 3600, prefix: str = "general"):
     def decorator(func):
         async def wrapper(*args, **kwargs):
             # Generate cache key from function name and arguments
-            import hashlib
-            import json
-            
             args_str = json.dumps([str(arg) for arg in args], sort_keys=True)
             kwargs_str = json.dumps(kwargs, sort_keys=True)
             key_data = f"{func.__name__}:{args_str}:{kwargs_str}"
